@@ -115,8 +115,11 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 	return nil
 }
 
-// func (s *syncService) syncAccouts(tx *Transaction) error {
-// 	carrier := &model.ChainAddress{
-// 		Address: tx.From,
-// 	}
-// }
+func (s *syncService) syncAccouts(tx *Transaction) error {
+	_ = s.syncMgr.GetAccountInfo(tx.From)
+	_ = s.syncMgr.GetAccountInfo(tx.To)
+	// carrier := &model.ChainAddress{
+	// 	Address: tx.From,
+	// }
+	return nil
+}
