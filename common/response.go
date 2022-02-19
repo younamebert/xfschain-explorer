@@ -1,4 +1,4 @@
-package controller
+package common
 
 import (
 	"net/http"
@@ -14,9 +14,13 @@ type Response struct {
 
 //SendResponse 返回数据结构体
 func SendResponse(c *gin.Context, code int, err error, data interface{}) {
+	var errStr string
+	if err != nil {
+		errStr = err.Error()
+	}
 	c.JSON(http.StatusOK, Response{
 		Code:    code,
-		Message: err.Error(),
+		Message: errStr,
 		Result:  data,
 	})
 }

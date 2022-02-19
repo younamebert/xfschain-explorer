@@ -1,9 +1,9 @@
 package router
 
+import "xfschainbrowser/router/home"
+
 type RouterGroup struct {
-	System   system.RouterGroup
-	Example  example.RouterGroup
-	Autocode autocode.RouterGroup
+	HomeRouter home.HomeRouterGroup
 }
 
 var RouterGroupApp = new(RouterGroup)

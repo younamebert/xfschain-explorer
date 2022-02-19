@@ -1,5 +1,9 @@
 package model
 
+import "xfschainbrowser/global"
+
+type HandleChainAddress struct{}
+
 type ChainAddress struct {
 	Basics
 	Id                    int64   `gorm:"column:block_number"`
@@ -20,4 +24,13 @@ type ChainAddress struct {
 	CreateFromBlockHash   string  `gorm:"column:create_from_block_hash"`
 	CreateFromStateRoot   string  `gorm:"column:create_from_state_root"`
 	CreateFromTxHash      string  `gorm:"column:create_from_tx_hash"`
+}
+
+func (handle *HandleChainAddress) Insert(data *ChainAddress) error {
+	db := global.GVA_DB.Table("chain_block_header")
+
+	if err := db.Create(&data).Error; err != nil {
+		return err
+	}
+	return nil
 }
