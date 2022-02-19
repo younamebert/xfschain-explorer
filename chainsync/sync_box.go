@@ -86,4 +86,5 @@ func (syncMgr *syncMgr) GetAccountInfo(addr string) *AccountState {
 		global.GVA_LOG.Panic("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
 		return nil
 	}
+	return rets
 }

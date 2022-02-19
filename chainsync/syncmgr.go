@@ -117,6 +117,24 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 
 func (s *syncService) syncAccouts(tx *Transaction) error {
 	_ = s.syncMgr.GetAccountInfo(tx.From)
+
+	// userType := 1
+	// if accountFrom.Code != "nil" {
+	// 	userType = 0
+	// }
+	// carrierFrom := &model.ChainAddress{
+	// 	Address:       tx.From,
+	// 	Balance:       accountFrom.Balance,
+	// 	Nonce:         accountFrom.Nonce,
+	// 	Extra:         accountFrom.Extra,
+	// 	Code:          accountFrom.Code,
+	// 	StateRoot:     accountFrom.StateRoot,
+	// 	Alias:         "",
+	// 	Type:          userType,
+	// 	Display:       1,
+	// 	FromStateRoot: accountFrom.StateRoot,
+	// 	FromBlockHeight: ,
+	// }
 	_ = s.syncMgr.GetAccountInfo(tx.To)
 	// carrier := &model.ChainAddress{
 	// 	Address: tx.From,
