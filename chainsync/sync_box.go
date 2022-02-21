@@ -83,7 +83,6 @@ func (syncMgr *syncMgr) GetAccountInfo(addr string) *AccountState {
 	}
 	rets := new(AccountState)
 	if err := syncMgr.xfsClient.CallMethod(1, "State.GetAccount", &req, &rets); err != nil {
-		global.GVA_LOG.Panic("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
 		return nil
 	}
 	return rets

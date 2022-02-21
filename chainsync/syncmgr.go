@@ -49,7 +49,7 @@ func (s *syncService) syncBlock(lastBlockHash string) error {
 		return err
 	}
 	// sync blockchain txs
-	if err := s.syncTxs(txs); err != nil {
+	if err := s.syncTxs(header, txs); err != nil {
 		return err
 	}
 
@@ -98,14 +98,14 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 			// GasFee:      "",
 			Data:  tx.Data,
 			Nonce: tx.Nonce,
-			Value: tx.Value,
+			Value: tx.Value.String(),
 			// Signature: "",
 			Hash:   tx.Hash,
 			Status: int(receipts.Status),
 			Type:   1,
 		}
 
-		if err := s.syncAccouts(tx); err != nil {
+		if err := s.syncAccouts(header, tx); err != nil {
 			return err
 		}
 		if err := s.recordHandle.writeTxs(carrier); err != nil {
@@ -115,29 +115,61 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 	return nil
 }
 
-func (s *syncService) syncAccouts(tx *Transaction) error {
-	_ = s.syncMgr.GetAccountInfo(tx.From)
+func (s *syncService) syncAccouts(header *BlockHeader, tx *Transaction) error {
 
-	// userType := 1
-	// if accountFrom.Code != "nil" {
-	// 	userType = 0
-	// }
-	// carrierFrom := &model.ChainAddress{
-	// 	Address:       tx.From,
-	// 	Balance:       accountFrom.Balance,
-	// 	Nonce:         accountFrom.Nonce,
-	// 	Extra:         accountFrom.Extra,
-	// 	Code:          accountFrom.Code,
-	// 	StateRoot:     accountFrom.StateRoot,
-	// 	Alias:         "",
-	// 	Type:          userType,
-	// 	Display:       1,
-	// 	FromStateRoot: accountFrom.StateRoot,
-	// 	FromBlockHeight: ,
-	// }
-	_ = s.syncMgr.GetAccountInfo(tx.To)
-	// carrier := &model.ChainAddress{
-	// 	Address: tx.From,
-	// }
+	if err := s.updateAccount(header, tx, tx.From); err != nil {
+		return err
+	}
+	if err := s.updateAccount(header, tx, tx.To); err != nil {
+		return err
+	}
 	return nil
+}
+
+func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr string) error {
+	obj := s.recordHandle.QueryAccount(addr)
+	objChain := s.syncMgr.GetAccountInfo(addr)
+
+	carrier := new(model.ChainAddress)
+	if obj == nil {
+		carrier.Address = addr
+		carrier.Balance = objChain.Balance
+		carrier.Nonce = objChain.Nonce
+		carrier.Extra = objChain.Extra
+		carrier.Code = objChain.Code
+		carrier.StateRoot = objChain.StateRoot
+		carrier.Type = 1
+		carrier.Display = 1
+		carrier.FromStateRoot = header.StateRoot
+		carrier.FromBlockHeight = header.Height
+		carrier.FromBlockHash = header.Hash
+		carrier.CreateFromBlockHash = header.Hash
+		carrier.CreateFromBlockHeight = header.Height
+		carrier.CreateFromBlockHash = header.Hash
+		carrier.CreateFromStateRoot = header.StateRoot
+		carrier.CreateFromTxHash = tx.Hash
+
+		return s.recordHandle.handleChainAddress.Insert(carrier)
+	} else {
+		if header.Height > obj.CreateFromBlockHeight {
+			carrier.CreateFromBlockHash = header.Hash
+			carrier.CreateFromBlockHeight = header.Height
+			carrier.CreateFromBlockHash = header.Hash
+			carrier.CreateFromStateRoot = header.StateRoot
+			carrier.CreateFromTxHash = tx.Hash
+		}
+		if header.Height < obj.CreateFromBlockHeight {
+			carrier.Address = tx.From
+			carrier.Balance = objChain.Balance
+			carrier.Nonce = objChain.Nonce
+			carrier.Extra = objChain.Extra
+			carrier.Code = objChain.Code
+			carrier.StateRoot = objChain.StateRoot
+			carrier.FromStateRoot = header.StateRoot
+			carrier.FromBlockHeight = header.Height
+			carrier.FromBlockHash = header.Hash
+
+		}
+		return s.recordHandle.updateAccount(carrier)
+	}
 }

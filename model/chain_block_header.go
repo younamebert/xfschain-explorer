@@ -4,7 +4,11 @@ import (
 	"xfschainbrowser/global"
 )
 
-type HandlerChainBlockHeader struct{}
+// type HandleChainBlockHeaderExternal interface {
+// 	Insert(data *ChainBlockHeader) error
+// }
+
+type HandleChainBlockHeader struct{}
 
 type ChainBlockHeader struct {
 	Id               int64   `gorm:"column:id"`
@@ -26,7 +30,7 @@ type ChainBlockHeader struct {
 	Rewards          float64 `gorm:"column:rewards"`
 }
 
-func (handle *HandlerChainBlockHeader) Insert(data *ChainBlockHeader) error {
+func (handle *HandleChainBlockHeader) Insert(data *ChainBlockHeader) error {
 	db := global.GVA_DB.Table("chain_block_header")
 
 	if err := db.Create(&data).Error; err != nil {

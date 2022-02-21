@@ -2,6 +2,12 @@ package model
 
 import "xfschainbrowser/global"
 
+// type HandleChainAddressExternal interface {
+// 	Insert(data *ChainAddress) error
+// 	Query(addr string) *ChainAddress
+// 	Update(target *ChainAddress) error
+// }
+
 type HandleChainAddress struct{}
 
 type ChainAddress struct {
@@ -27,7 +33,7 @@ type ChainAddress struct {
 }
 
 func (handle *HandleChainAddress) Insert(data *ChainAddress) error {
-	db := global.GVA_DB.Table("chain_block_header")
+	db := global.GVA_DB.Table("chain_address")
 
 	if err := db.Create(&data).Error; err != nil {
 		return err
@@ -35,10 +41,20 @@ func (handle *HandleChainAddress) Insert(data *ChainAddress) error {
 	return nil
 }
 
-func (hanle *HandleChainAddress) Select(addr string) *ChainAddress {
-	db := global.GVA_DB.Table("chain_block_header")
+func (hanle *HandleChainAddress) Query(addr string) *ChainAddress {
+	db := global.GVA_DB.Table("chain_address")
 
 	addrChain := new(ChainAddress)
-	db.Where("address = ?", addr).First(&addrChain)
+	if err := db.Where("address = ?", addr).First(&addrChain).Error; err != nil {
+		return nil
+	}
 	return addrChain
+}
+
+func (handle *HandleChainAddress) Update(target *ChainAddress) error {
+	db := global.GVA_DB.Table("chain_address")
+	if err := db.Where("address = ?", target.Address).Updates(&target).Error; err != nil {
+		return err
+	}
+	return nil
 }
