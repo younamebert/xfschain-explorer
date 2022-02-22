@@ -1,26 +1,46 @@
 package chainsync
 
 import (
+	"math/big"
+	"strconv"
 	"sync"
+	"time"
+	"xfschainbrowser/common"
+	"xfschainbrowser/conf"
 	"xfschainbrowser/model"
 )
 
 type syncService struct {
-	syncMgr      *syncMgr
+	chainMgr     chainMgr
 	recordHandle *recordHandle
 	mx           sync.Mutex
 }
 
 func NewSyncService() *syncService {
 	return &syncService{
-		syncMgr:      newsyncMgr(),
+		chainMgr:     newsyncMgr(),
 		recordHandle: newRecordHandle(),
 	}
 }
 
 func (s *syncService) Start() {
-	if err := s.SyncBlocks(); err != nil {
+	if err := s.process(); err != nil {
 		panic(err)
+	}
+}
+
+func (s *syncService) process() error {
+	timeDur, err := time.ParseDuration(conf.SyncForceSyncPeriod)
+	if err != nil {
+		return err
+	}
+	for {
+		select {
+		case <-time.After(timeDur):
+			if err := s.SyncBlocks(); err != nil {
+				return err
+			}
+		}
 	}
 }
 
@@ -30,17 +50,25 @@ func (s *syncService) Stop() {
 func (s *syncService) SyncBlocks() error {
 	s.mx.Lock()
 	defer s.mx.Unlock()
-	lastBlock := s.syncMgr.CurrentBHeader()
 
-	if err := s.syncBlock(lastBlock.Hash); err != nil {
-		return err
+	lastBlock := s.chainMgr.CurrentBHeader()
+	if v := s.recordHandle.QueryByHash(lastBlock.Hash); v != nil {
+		downBlock := s.recordHandle.QueryDown()
+		if err := s.syncBlock(downBlock.HashPrevBlock); err != nil {
+			return err
+		}
+	} else {
+		if err := s.syncBlock(lastBlock.Hash); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func (s *syncService) syncBlock(lastBlockHash string) error {
-	header := s.syncMgr.GetBlockHeaderByHash(lastBlockHash)
-	txs := s.syncMgr.GetTxsByBlockHash(lastBlockHash)
+
+	header := s.chainMgr.GetBlockHeaderByHash(lastBlockHash)
+	txs := s.chainMgr.GetTxsByBlockHash(lastBlockHash)
 	if header.Height == 0 {
 		return nil
 	}
@@ -52,8 +80,7 @@ func (s *syncService) syncBlock(lastBlockHash string) error {
 	if err := s.syncTxs(header, txs); err != nil {
 		return err
 	}
-
-	return s.syncBlock(header.HashPrevBlock)
+	return nil
 }
 
 func (s *syncService) syncBlockHeader(header *BlockHeader, txCount int) error {
@@ -84,7 +111,8 @@ func (s *syncService) syncBlockHeader(header *BlockHeader, txCount int) error {
 func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 
 	for _, tx := range txs {
-		receipts := s.syncMgr.GetReceiptByHash(tx.Hash)
+		receipts := s.chainMgr.GetReceiptByHash(tx.Hash)
+		gasuesd, _ := new(big.Float).SetInt64(receipts.GasUsed).Float64()
 		carrier := &model.ChainBlockTx{
 			BlockHash:   header.Hash,
 			BlockHeight: header.Height,
@@ -94,11 +122,11 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 			To:          tx.To,
 			GasPrice:    tx.GasPrice,
 			GasLimit:    tx.GasLimit,
-			GasUsed:     receipts.GasUsed,
-			// GasFee:      "",
-			Data:  tx.Data,
-			Nonce: tx.Nonce,
-			Value: tx.Value.String(),
+			GasUsed:     gasuesd,
+			GasFee:      common.CalcGasFee(gasuesd, tx.GasPrice).String(),
+			Data:        tx.Data,
+			Nonce:       tx.Nonce,
+			Value:       strconv.FormatInt(tx.Value, 10),
 			// Signature: "",
 			Hash:   tx.Hash,
 			Status: int(receipts.Status),
@@ -128,7 +156,7 @@ func (s *syncService) syncAccouts(header *BlockHeader, tx *Transaction) error {
 
 func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr string) error {
 	obj := s.recordHandle.QueryAccount(addr)
-	objChain := s.syncMgr.GetAccountInfo(addr)
+	objChain := s.chainMgr.GetAccountInfo(addr)
 
 	carrier := new(model.ChainAddress)
 	if obj == nil {
@@ -149,7 +177,7 @@ func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr s
 		carrier.CreateFromStateRoot = header.StateRoot
 		carrier.CreateFromTxHash = tx.Hash
 
-		return s.recordHandle.handleChainAddress.Insert(carrier)
+		return s.recordHandle.writeAccount(carrier)
 	} else {
 		if header.Height > obj.CreateFromBlockHeight {
 			carrier.CreateFromBlockHash = header.Hash

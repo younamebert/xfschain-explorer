@@ -31,10 +31,50 @@ type ChainBlockHeader struct {
 }
 
 func (handle *HandleChainBlockHeader) Insert(data *ChainBlockHeader) error {
+	// data.CreateTime = time.Now()
 	db := global.GVA_DB.Table("chain_block_header")
 
 	if err := db.Create(&data).Error; err != nil {
 		return err
+
 	}
 	return nil
+}
+
+func (hande *HandleChainBlockHeader) QueryByHash(hash string) *ChainBlockHeader {
+	db := global.GVA_DB.Table("chain_block_header")
+
+	chainBlockHeader := new(ChainBlockHeader)
+	if err := db.Where("hash = ?", hash).First(&chainBlockHeader).Error; err != nil {
+		return nil
+	}
+	return chainBlockHeader
+}
+
+func (hanle *HandleChainBlockHeader) QueryUp() *ChainBlockHeader {
+	db := global.GVA_DB.Table("chain_block_header")
+	chainBlockHeader := new(ChainBlockHeader)
+	if err := db.Limit(1).Order("height desc").First(&chainBlockHeader).Error; err != nil {
+		return nil
+	}
+	return chainBlockHeader
+}
+
+func (hanle *HandleChainBlockHeader) QueryDown() *ChainBlockHeader {
+	db := global.GVA_DB.Table("chain_block_header")
+	chainBlockHeader := new(ChainBlockHeader)
+	if err := db.Limit(1).Order("height asc").First(&chainBlockHeader).Error; err != nil {
+		return nil
+	}
+	return chainBlockHeader
+}
+
+func (handle *HandleChainBlockTx) QueryBlockHeadersByTime(startTime int64) []*ChainBlockHeader {
+	db := global.GVA_DB.Table("chain_block_tx")
+
+	chainBlockHeaders := make([]*ChainBlockHeader, 0)
+	if err := db.Where("timestamp > ?", startTime).Find(&chainBlockHeaders).Error; err != nil {
+		return nil
+	}
+	return chainBlockHeaders
 }

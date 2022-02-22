@@ -44,7 +44,7 @@ func (syncMgr *syncMgr) GetReceiptByHash(txhash string) *Receipt {
 		TxHash: txhash,
 	}
 	recs := new(Receipt)
-	if err := syncMgr.xfsClient.CallMethod(1, "Chain.GetBlockbyHash", &req, &recs); err != nil {
+	if err := syncMgr.xfsClient.CallMethod(1, "Chain.GetReceiptByHash", &req, &recs); err != nil {
 		global.GVA_LOG.Panic("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
 		return nil
 	}

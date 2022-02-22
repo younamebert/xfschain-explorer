@@ -1,6 +1,9 @@
 package model
 
-import "xfschainbrowser/global"
+import (
+	"time"
+	"xfschainbrowser/global"
+)
 
 // type HandleChainAddressExternal interface {
 // 	Insert(data *ChainAddress) error
@@ -12,7 +15,7 @@ type HandleChainAddress struct{}
 
 type ChainAddress struct {
 	Basics
-	Id                    int64  `gorm:"column:block_number"`
+	Id                    int64  `gorm:"column:id"`
 	Address               string `gorm:"column:address"`
 	Balance               string `gorm:"column:balance"`
 	Nonce                 int64  `gorm:"column:nonce"`
@@ -33,9 +36,10 @@ type ChainAddress struct {
 }
 
 func (handle *HandleChainAddress) Insert(data *ChainAddress) error {
-	db := global.GVA_DB.Table("chain_address")
-
-	if err := db.Create(&data).Error; err != nil {
+	// db := global.GVA_DB.Table("chain_address")
+	data.CreateTime = time.Now()
+	data.UpdateTime = time.Now()
+	if err := global.GVA_DB.Create(&data).Error; err != nil {
 		return err
 	}
 	return nil
@@ -53,8 +57,18 @@ func (hanle *HandleChainAddress) Query(addr string) *ChainAddress {
 
 func (handle *HandleChainAddress) Update(target *ChainAddress) error {
 	db := global.GVA_DB.Table("chain_address")
+	target.UpdateTime = time.Now()
 	if err := db.Where("address = ?", target.Address).Updates(&target).Error; err != nil {
 		return err
 	}
 	return nil
+}
+
+func (hanle *HandleChainAddress) Count() int64 {
+	db := global.GVA_DB.Table("chain_address")
+	var count int64
+	if err := db.Count(&count).Error; err != nil {
+		return 0
+	}
+	return count
 }

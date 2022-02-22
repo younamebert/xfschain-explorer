@@ -14,7 +14,7 @@ func Gorm() *gorm.DB {
 		fmt.Printf("gorm err:%v\n", err)
 		panic(err)
 	}
-	defer db.Close()
+	// defer db.Close()
 	db.SingularTable(true)
 	return db
 }

@@ -1,7 +1,5 @@
 package chainsync
 
-import "encoding/json"
-
 //有hash
 type BlockHeader struct {
 	Height        int64  `json:"height"`
@@ -40,18 +38,18 @@ type Receipt struct {
 	Version int64  `json:"version"`
 	Status  int64  `json:"status"`
 	TxHash  string `json:"tx_hash"`
-	GasUsed string `json:"gas_used"`
+	GasUsed int64  `json:"gas_used"`
 }
 
 type Transaction struct {
-	Version   int64       `json:"version"`
-	To        string      `json:"to"`
-	GasPrice  float64     `json:"gas_price"`
-	GasLimit  float64     `json:"gas_limit"`
-	Data      string      `json:"data"`
-	Nonce     int64       `json:"nonce"`
-	Value     json.Number `json:"value"`
-	Signature string      `json:"signature"`
-	From      string      `json:"from"`
-	Hash      string      `json:"hash"`
+	Version   int64   `json:"version"`
+	To        string  `json:"to"`
+	GasPrice  float64 `json:"gas_price"`
+	GasLimit  float64 `json:"gas_limit"`
+	Data      string  `json:"data"`
+	Nonce     int64   `json:"nonce"`
+	Value     int64   `json:"value"`
+	Signature string  `json:"signature"`
+	From      string  `json:"from"`
+	Hash      string  `json:"hash"`
 }

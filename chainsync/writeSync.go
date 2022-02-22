@@ -40,3 +40,14 @@ func (wr *recordHandle) updateAccount(data *model.ChainAddress) error {
 func (wr *recordHandle) QueryAccount(addr string) *model.ChainAddress {
 	return wr.handleChainAddress.Query(addr)
 }
+func (wr *recordHandle) QueryByHash(hash string) *model.ChainBlockHeader {
+	return wr.handleBlockHeader.QueryByHash(hash)
+}
+
+func (wr *recordHandle) QueryUp() *model.ChainBlockHeader {
+	return wr.handleBlockHeader.QueryUp()
+}
+
+func (wr *recordHandle) QueryDown() *model.ChainBlockHeader {
+	return wr.handleBlockHeader.QueryDown()
+}

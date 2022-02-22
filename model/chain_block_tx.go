@@ -1,6 +1,9 @@
 package model
 
-import "xfschainbrowser/global"
+import (
+	"time"
+	"xfschainbrowser/global"
+)
 
 // type  HandleChainBlockTxExternal interface{
 // 	Insert(data *ChainBlockTx) error
@@ -18,7 +21,7 @@ type ChainBlockTx struct {
 	To          string  `gorm:"column:to"`
 	GasPrice    float64 `gorm:"column:gas_price"`
 	GasLimit    float64 `gorm:"column:gas_limit"`
-	GasUsed     string  `gorm:"column:gas_used"`
+	GasUsed     float64 `gorm:"column:gas_used"`
 	GasFee      string  `gorm:"column:gas_fee"`
 	Data        string  `gorm:"column:data"`
 	Nonce       int64   `gorm:"column:nonce"`
@@ -30,9 +33,21 @@ type ChainBlockTx struct {
 }
 
 func (handle *HandleChainBlockTx) Insert(data *ChainBlockTx) error {
+	data.CreateTime = time.Now()
+	data.UpdateTime = time.Now()
 	db := global.GVA_DB.Table("chain_block_tx")
 	if err := db.Create(&data).Error; err != nil {
 		return err
 	}
 	return nil
+}
+
+func (handle *HandleChainBlockTx) QueryByBlockHash(blockHash string) *ChainBlockTx {
+	db := global.GVA_DB.Table("chain_block_tx")
+
+	ChainBlockTx := new(ChainBlockTx)
+	if err := db.Where("block_hash = ?", blockHash).First(&ChainBlockTx).Error; err != nil {
+		return nil
+	}
+	return ChainBlockTx
 }
