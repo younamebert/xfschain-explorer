@@ -1,6 +1,10 @@
 package common
 
-import "math/big"
+import (
+	"math/big"
+
+	"github.com/shopspring/decimal"
+)
 
 func CalcGasFee(x, y float64) *big.Float {
 	result := new(big.Float)
@@ -8,4 +12,10 @@ func CalcGasFee(x, y float64) *big.Float {
 	ys := new(big.Float).SetFloat64(y)
 	result.Mul(xs, ys)
 	return result
+}
+
+func Div(x, y int64) decimal.Decimal {
+	xs := decimal.NewFromInt(x)
+	ys := decimal.NewFromInt(y)
+	return xs.Div(ys).Round(2)
 }

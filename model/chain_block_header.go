@@ -69,12 +69,26 @@ func (hanle *HandleChainBlockHeader) QueryDown() *ChainBlockHeader {
 	return chainBlockHeader
 }
 
-func (handle *HandleChainBlockTx) QueryBlockHeadersByTime(startTime int64) []*ChainBlockHeader {
-	db := global.GVA_DB.Table("chain_block_tx")
+func (handle *HandleChainBlockHeader) QueryBlockHeadersByTime(startTime int64) []*ChainBlockHeader {
+	db := global.GVA_DB.Table("chain_block_header")
 
 	chainBlockHeaders := make([]*ChainBlockHeader, 0)
-	if err := db.Where("timestamp > ?", startTime).Find(&chainBlockHeaders).Error; err != nil {
+
+	if err := db.Where("timestamp > ?", startTime).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
 		return nil
 	}
 	return chainBlockHeaders
+}
+
+func (handle *HandleChainBlockHeader) QueryTxCountSumByTime(startTime int64) int64 {
+	db := global.GVA_DB.Table("chain_block_header")
+	var totalScore []int64
+	if err := db.Where("timestamp > ?", startTime).Pluck("sum(tx_count)", &totalScore).Error; err != nil {
+		return 0
+	}
+	if len(totalScore) == 0 {
+		return 0
+	} else {
+		return totalScore[0]
+	}
 }
