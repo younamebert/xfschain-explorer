@@ -15,6 +15,9 @@ func CalcGasFee(x, y float64) *big.Float {
 }
 
 func Div(x, y int64) decimal.Decimal {
+	if x == 0 || y == 0 {
+		return decimal.NewFromInt(0)
+	}
 	xs := decimal.NewFromInt(x)
 	ys := decimal.NewFromInt(y)
 	return xs.Div(ys).Round(2)

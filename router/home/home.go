@@ -2,7 +2,7 @@ package home
 
 import (
 	api "xfschainbrowser/api/index"
-	"xfschainbrowser/model"
+	"xfschainbrowser/common/apis"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,9 +13,8 @@ func (r *HomeRouterGroup) HomeRouters(Router *gin.RouterGroup) {
 	group := Router.Group("/index")
 
 	resources := api.IndexLinkApi{
-		HandleBlockHeader:  new(model.HandleChainBlockHeader),
-		HandleBlockTxs:     new(model.HandleChainBlockTx),
-		HandleChainAddress: new(model.HandleChainAddress),
+		Handle: apis.NewLinkApi(),
 	}
+
 	group.GET("/status", resources.Status)
 }

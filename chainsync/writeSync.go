@@ -45,9 +45,19 @@ func (wr *recordHandle) QueryByHash(hash string) *model.ChainBlockHeader {
 }
 
 func (wr *recordHandle) QueryUp() *model.ChainBlockHeader {
-	return wr.handleBlockHeader.QueryUp()
+	ra := wr.handleBlockHeader.QueryUp(1)
+	if len(ra) > 1 {
+		return ra[0]
+	} else {
+		return nil
+	}
 }
 
 func (wr *recordHandle) QueryDown() *model.ChainBlockHeader {
-	return wr.handleBlockHeader.QueryDown()
+	ra := wr.handleBlockHeader.QueryDown(1)
+	if len(ra) > 1 {
+		return ra[0]
+	} else {
+		return nil
+	}
 }

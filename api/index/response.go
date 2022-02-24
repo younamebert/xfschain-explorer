@@ -15,6 +15,11 @@ type StatusResp struct {
 }
 
 type LatestResp struct {
-	Blocks *model.ChainBlockHeader
-	Txs    *model.ChainBlockTx
+	Blocks []*model.ChainBlockHeader
+	Txs    []*model.ChainBlockTx
+}
+
+type TxCountByDayResp struct {
+	Timestamp int64 `json:"timestamp"`
+	TxCount   int64 `json:"txcount"`
 }

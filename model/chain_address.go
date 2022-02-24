@@ -40,6 +40,7 @@ func (handle *HandleChainAddress) Insert(data *ChainAddress) error {
 	data.CreateTime = time.Now()
 	data.UpdateTime = time.Now()
 	if err := global.GVA_DB.Create(&data).Error; err != nil {
+		global.GVA_LOG.Fatal(err.Error())
 		return err
 	}
 	return nil
@@ -50,6 +51,7 @@ func (hanle *HandleChainAddress) Query(addr string) *ChainAddress {
 
 	addrChain := new(ChainAddress)
 	if err := db.Where("address = ?", addr).First(&addrChain).Error; err != nil {
+		global.GVA_LOG.Fatal(err.Error())
 		return nil
 	}
 	return addrChain
@@ -59,6 +61,7 @@ func (handle *HandleChainAddress) Update(target *ChainAddress) error {
 	db := global.GVA_DB.Table("chain_address")
 	target.UpdateTime = time.Now()
 	if err := db.Where("address = ?", target.Address).Updates(&target).Error; err != nil {
+		global.GVA_LOG.Fatal(err.Error())
 		return err
 	}
 	return nil
@@ -68,6 +71,7 @@ func (hanle *HandleChainAddress) Count() int64 {
 	db := global.GVA_DB.Table("chain_address")
 	var count int64
 	if err := db.Count(&count).Error; err != nil {
+		global.GVA_LOG.Fatal(err.Error())
 		return 0
 	}
 	return count

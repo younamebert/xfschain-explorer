@@ -37,6 +37,7 @@ func (handle *HandleChainBlockTx) Insert(data *ChainBlockTx) error {
 	data.UpdateTime = time.Now()
 	db := global.GVA_DB.Table("chain_block_tx")
 	if err := db.Create(&data).Error; err != nil {
+		global.GVA_LOG.Fatal(err.Error())
 		return err
 	}
 	return nil
@@ -47,7 +48,31 @@ func (handle *HandleChainBlockTx) QueryByBlockHash(blockHash string) *ChainBlock
 
 	ChainBlockTx := new(ChainBlockTx)
 	if err := db.Where("block_hash = ?", blockHash).First(&ChainBlockTx).Error; err != nil {
+		global.GVA_LOG.Fatal(err.Error())
 		return nil
 	}
 	return ChainBlockTx
+}
+
+func (hanle *HandleChainBlockTx) QueryLastBlockTxs(limit int64) []*ChainBlockTx {
+	db := global.GVA_DB.Table("chain_block_tx")
+
+	ChainBlockTxs := make([]*ChainBlockTx, limit)
+	if err := db.Limit(limit).Order("block_height desc,nonce desc").First(&ChainBlockTxs).Error; err != nil {
+		global.GVA_LOG.Fatal(err.Error())
+		return nil
+	}
+
+	return ChainBlockTxs
+}
+
+func (hanle *HandleChainBlockTx) GetTxs(page, pageSize, limit int) []*ChainBlockTx {
+	db := global.GVA_DB.Table("chain_block_tx")
+
+	ChainBlockTxs := make([]*ChainBlockTx, limit)
+	if err := db.Limit(limit).Offset((page - 1) * pageSize).Order("block_height desc,nonce desc").First(&ChainBlockTxs).Error; err != nil {
+		global.GVA_LOG.Fatal(err.Error())
+		return nil
+	}
+	return ChainBlockTxs
 }
