@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -68,9 +69,35 @@ func (i *IndexLinkApi) LatestBlocksAndTxs(c *gin.Context) {
 }
 
 func (i *IndexLinkApi) Search(c *gin.Context) {
-	// tx_count_by_day
-	// txcountByday :=
+	param := c.Query("p")
+	if param == "" && len(param) > 100 {
+		common.SendResponse(c, http.StatusBadRequest, errors.New("illegal parameter Error"), nil)
+	}
 
+	result := new(SearchResp)
+	params := "%" + param + "%"
+
+	blocksWheres := make([]interface{}, 0)
+	blocksWheres = append(blocksWheres, params, params)
+	blocks := i.Handle.HandleBlockHeader.QueryLike("hash like ? or height like ?", blocksWheres)
+	if (blocks != nil) && (len(blocks) > 0) {
+		result.Block = blocks[0]
+	}
+
+	txsWheres := make([]interface{}, 0)
+	txsWheres = append(txsWheres, params)
+	txs := i.Handle.HandleBlockTxs.QueryLikeTx("hash like ?", txsWheres)
+	if (txs != nil) && (len(txs) > 0) {
+		result.Tx = txs[0]
+	}
+
+	AccountWhere := make([]interface{}, 0)
+	AccountWhere = append(AccountWhere, params)
+	accounts := i.Handle.HandleChainAddress.QueryLikeAccount("address like ?", AccountWhere)
+	if (accounts != nil) && (len(accounts) > 0) {
+		result.Account = accounts[0]
+	}
+	common.SendResponse(c, http.StatusOK, nil, result)
 }
 
 func (i *IndexLinkApi) TxCountByDay(c *gin.Context) {

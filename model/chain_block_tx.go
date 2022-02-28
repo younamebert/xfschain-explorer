@@ -8,7 +8,8 @@ import (
 // type  HandleChainBlockTxExternal interface{
 // 	Insert(data *ChainBlockTx) error
 // }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       HandlerChainBlockTx struct{}
-type HandleChainBlockTx struct{}
+type HandleChainBlockTx struct {
+}
 
 type ChainBlockTx struct {
 	Basics
@@ -37,42 +38,66 @@ func (handle *HandleChainBlockTx) Insert(data *ChainBlockTx) error {
 	data.UpdateTime = time.Now()
 	db := global.GVA_DB.Table("chain_block_tx")
 	if err := db.Create(&data).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+		global.GVA_LOG.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (handle *HandleChainBlockTx) QueryByBlockHash(blockHash string) *ChainBlockTx {
+func (handle *HandleChainBlockTx) Query(query, args interface{}) []*ChainBlockTx {
 	db := global.GVA_DB.Table("chain_block_tx")
 
-	ChainBlockTx := new(ChainBlockTx)
-	if err := db.Where("block_hash = ?", blockHash).First(&ChainBlockTx).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+	ChainBlockTxs := make([]*ChainBlockTx, 0)
+	if err := db.Where(query, args).Find(&ChainBlockTxs).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
-	return ChainBlockTx
+	return ChainBlockTxs
 }
 
 func (hanle *HandleChainBlockTx) QueryLastBlockTxs(limit int64) []*ChainBlockTx {
 	db := global.GVA_DB.Table("chain_block_tx")
 
 	ChainBlockTxs := make([]*ChainBlockTx, limit)
-	if err := db.Limit(limit).Order("block_height desc,nonce desc").First(&ChainBlockTxs).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+	if err := db.Limit(limit).Order("block_height desc,nonce desc").Find(&ChainBlockTxs).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
 
 	return ChainBlockTxs
 }
 
-func (hanle *HandleChainBlockTx) GetTxs(page, pageSize, limit int) []*ChainBlockTx {
+func (hanle *HandleChainBlockTx) GetTxs(query, args interface{}, page, pageSize int) []*ChainBlockTx {
 	db := global.GVA_DB.Table("chain_block_tx")
 
-	ChainBlockTxs := make([]*ChainBlockTx, limit)
-	if err := db.Limit(limit).Offset((page - 1) * pageSize).Order("block_height desc,nonce desc").First(&ChainBlockTxs).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+	ChainBlockTxs := make([]*ChainBlockTx, pageSize)
+	if query != nil && args != nil {
+		db = db.Where(query, args)
+	}
+	if err := db.Limit(pageSize).Offset((page - 1) * pageSize).Order("block_height desc,nonce desc").Find(&ChainBlockTxs).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
 	return ChainBlockTxs
+}
+
+func (hanl *HandleChainBlockTx) QueryLikeTx(query interface{}, where []interface{}) []*ChainBlockTx {
+	ChainBlockTxs := make([]*ChainBlockTx, 0)
+	db := global.GVA_DB.Table("chain_block_tx")
+
+	if err := db.Where(query, where...).Order("block_height desc").Find(&ChainBlockTxs).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
+		return nil
+	}
+	return ChainBlockTxs
+}
+
+func (hanle *HandleChainBlockTx) Count() int64 {
+	db := global.GVA_DB.Table("chain_block_tx")
+	var count int64
+	if err := db.Count(&count).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
+		return 0
+	}
+	return count
 }

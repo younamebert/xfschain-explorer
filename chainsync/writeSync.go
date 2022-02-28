@@ -38,10 +38,18 @@ func (wr *recordHandle) updateAccount(data *model.ChainAddress) error {
 }
 
 func (wr *recordHandle) QueryAccount(addr string) *model.ChainAddress {
-	return wr.handleChainAddress.Query(addr)
+	if v := wr.handleChainAddress.Query("address = ?", addr); v != nil {
+		return v[0]
+	} else {
+		return nil
+	}
 }
 func (wr *recordHandle) QueryByHash(hash string) *model.ChainBlockHeader {
-	return wr.handleBlockHeader.QueryByHash(hash)
+	if v := wr.handleBlockHeader.Query("hash = ?", hash); v != nil {
+		return v[0]
+	} else {
+		return nil
+	}
 }
 
 func (wr *recordHandle) QueryUp() *model.ChainBlockHeader {

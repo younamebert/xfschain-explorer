@@ -35,29 +35,29 @@ func (handle *HandleChainBlockHeader) Insert(data *ChainBlockHeader) error {
 	db := global.GVA_DB.Table("chain_block_header")
 
 	if err := db.Create(&data).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+		global.GVA_LOG.Error(err.Error())
 		return err
 
 	}
 	return nil
 }
 
-func (hande *HandleChainBlockHeader) QueryByHash(hash string) *ChainBlockHeader {
+func (handle *HandleChainBlockHeader) Query(query, args interface{}) []*ChainBlockHeader {
 	db := global.GVA_DB.Table("chain_block_header")
 
-	chainBlockHeader := new(ChainBlockHeader)
-	if err := db.Where("hash = ?", hash).First(&chainBlockHeader).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+	chainBlockHeaders := make([]*ChainBlockHeader, 0)
+	if err := db.Where(query, args).Find(&chainBlockHeaders).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
-	return chainBlockHeader
+	return chainBlockHeaders
 }
 
 func (hanle *HandleChainBlockHeader) QueryUp(limit int64) []*ChainBlockHeader {
 	db := global.GVA_DB.Table("chain_block_header")
 	chainBlockHeaders := make([]*ChainBlockHeader, limit)
-	if err := db.Limit(limit).Order("height desc").First(&chainBlockHeaders).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+	if err := db.Limit(limit).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
 	return chainBlockHeaders
@@ -66,8 +66,8 @@ func (hanle *HandleChainBlockHeader) QueryUp(limit int64) []*ChainBlockHeader {
 func (hanle *HandleChainBlockHeader) QueryDown(limit int64) []*ChainBlockHeader {
 	db := global.GVA_DB.Table("chain_block_header")
 	chainBlockHeaders := make([]*ChainBlockHeader, limit)
-	if err := db.Limit(limit).Order("height asc").First(&chainBlockHeaders).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+	if err := db.Limit(limit).Order("height asc").Find(&chainBlockHeaders).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
 	return chainBlockHeaders
@@ -79,7 +79,7 @@ func (handle *HandleChainBlockHeader) QueryBlockHeadersByTime(startTime int64) [
 	chainBlockHeaders := make([]*ChainBlockHeader, 0)
 
 	if err := db.Where("timestamp > ?", startTime).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
 	return chainBlockHeaders
@@ -91,7 +91,7 @@ func (handle *HandleChainBlockHeader) QueryTxCountSumByTime(startTime int64) int
 	var result []int64
 	var sum int64
 	if err := db.Pluck("tx_count", &result).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+		global.GVA_LOG.Error(err.Error())
 		return 0
 	} else {
 		for _, v := range result {
@@ -102,13 +102,37 @@ func (handle *HandleChainBlockHeader) QueryTxCountSumByTime(startTime int64) int
 
 }
 
-func (hanle *HandleChainBlockHeader) GetBlocks(page, pageSize, limit int) []*ChainBlockHeader {
+func (hanle *HandleChainBlockHeader) GetBlocks(query, args interface{}, page, pageSize int) []*ChainBlockHeader {
 	db := global.GVA_DB.Table("chain_block_header")
 
-	chainBlockHeaders := make([]*ChainBlockHeader, limit)
-	if err := db.Limit(limit).Offset((page - 1) * pageSize).Order("block_height desc,nonce desc").First(&chainBlockHeaders).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+	chainBlockHeaders := make([]*ChainBlockHeader, pageSize)
+	if query != nil && args != nil {
+		db = db.Where(query, args)
+	}
+	if err := db.Limit(pageSize).Offset((page - 1) * pageSize).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
 	return chainBlockHeaders
+}
+
+func (hanl *HandleChainBlockHeader) QueryLike(query interface{}, where []interface{}) []*ChainBlockHeader {
+	chainBlockHeaders := make([]*ChainBlockHeader, 0)
+	db := global.GVA_DB.Table("chain_block_header")
+
+	if err := db.Where(query, where...).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
+		return nil
+	}
+	return chainBlockHeaders
+}
+
+func (hanle *HandleChainBlockHeader) Count() int64 {
+	db := global.GVA_DB.Table("chain_block_header")
+	var count int64
+	if err := db.Count(&count).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
+		return 0
+	}
+	return count
 }

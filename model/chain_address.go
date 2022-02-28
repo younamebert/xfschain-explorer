@@ -5,12 +5,6 @@ import (
 	"xfschainbrowser/global"
 )
 
-// type HandleChainAddressExternal interface {
-// 	Insert(data *ChainAddress) error
-// 	Query(addr string) *ChainAddress
-// 	Update(target *ChainAddress) error
-// }
-
 type HandleChainAddress struct{}
 
 type ChainAddress struct {
@@ -28,6 +22,7 @@ type ChainAddress struct {
 	FromStateRoot         string `gorm:"column:from_state_root"`
 	FromBlockHeight       int64  `gorm:"column:from_block_height"`
 	FromBlockHash         string `gorm:"column:from_block_hash"`
+	TxCount               int    `gorm:"column:tx_count"`
 	CreateFromAddress     string `gorm:"column:create_from_address"`
 	CreateFromBlockHeight int64  `gorm:"column:create_from_block_height"`
 	CreateFromBlockHash   string `gorm:"column:create_from_block_hash"`
@@ -40,39 +35,64 @@ func (handle *HandleChainAddress) Insert(data *ChainAddress) error {
 	data.CreateTime = time.Now()
 	data.UpdateTime = time.Now()
 	if err := global.GVA_DB.Create(&data).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+		global.GVA_LOG.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (hanle *HandleChainAddress) Query(addr string) *ChainAddress {
+func (handle *HandleChainAddress) Query(query, args interface{}) []*ChainAddress {
 	db := global.GVA_DB.Table("chain_address")
 
-	addrChain := new(ChainAddress)
-	if err := db.Where("address = ?", addr).First(&addrChain).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+	addrChains := make([]*ChainAddress, 0)
+	if err := db.Where(query, args).Find(&addrChains).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
-	return addrChain
+	return addrChains
 }
 
 func (handle *HandleChainAddress) Update(target *ChainAddress) error {
 	db := global.GVA_DB.Table("chain_address")
 	target.UpdateTime = time.Now()
 	if err := db.Where("address = ?", target.Address).Updates(&target).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+		global.GVA_LOG.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (hanle *HandleChainAddress) Count() int64 {
+func (handle *HandleChainAddress) Count() int64 {
 	db := global.GVA_DB.Table("chain_address")
 	var count int64
 	if err := db.Count(&count).Error; err != nil {
-		global.GVA_LOG.Fatal(err.Error())
+		global.GVA_LOG.Error(err.Error())
 		return 0
 	}
 	return count
+}
+
+func (handle *HandleChainAddress) QueryLikeAccount(query interface{}, where []interface{}) []*ChainAddress {
+	addrChains := make([]*ChainAddress, 0)
+	db := global.GVA_DB.Table("chain_address")
+
+	if err := db.Where(query, where...).Find(&addrChains).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
+		return nil
+	}
+	return addrChains
+}
+
+func (handle *HandleChainAddress) GetAccounts(query, args interface{}, page, pageSize int) []*ChainAddress {
+	db := global.GVA_DB.Table("chain_address")
+
+	ChainAddresss := make([]*ChainAddress, pageSize)
+	if query != nil && args != nil {
+		db = db.Where(query, args)
+	}
+	if err := db.Limit(pageSize).Offset((page - 1) * pageSize).Order("update_time desc").Find(&ChainAddresss).Error; err != nil {
+		global.GVA_LOG.Error(err.Error())
+		return nil
+	}
+	return ChainAddresss
 }

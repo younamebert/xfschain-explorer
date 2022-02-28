@@ -168,6 +168,7 @@ func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr s
 		carrier.StateRoot = objChain.StateRoot
 		carrier.Type = 1
 		carrier.Display = 1
+		carrier.TxCount = 0
 		carrier.FromStateRoot = header.StateRoot
 		carrier.FromBlockHeight = header.Height
 		carrier.FromBlockHash = header.Hash
@@ -185,6 +186,7 @@ func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr s
 			carrier.CreateFromBlockHash = header.Hash
 			carrier.CreateFromStateRoot = header.StateRoot
 			carrier.CreateFromTxHash = tx.Hash
+			carrier.TxCount = obj.TxCount + 1
 		}
 		if header.Height < obj.CreateFromBlockHeight {
 			carrier.Address = tx.From

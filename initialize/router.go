@@ -21,6 +21,9 @@ func Routers() *gin.Engine {
 
 	// 获取路由组实例
 	homeRouter := router.RouterGroupApp.HomeRouter
+	blockRouter := router.RouterGroupApp.BlocksRouter
+	txsRouter := router.RouterGroupApp.TxsRouter
+	accountRouter := router.RouterGroupApp.AccountsRouter
 
 	PublicGroup := Router.Group("")
 	{
@@ -30,6 +33,10 @@ func Routers() *gin.Engine {
 		})
 	}
 	homeRouter.HomeRouters(PublicGroup)
+	blockRouter.BlocksRouters(PublicGroup)
+	txsRouter.TxsRouters(PublicGroup)
+	accountRouter.AccountsRouters(PublicGroup)
+
 	// {
 	// 	IndexRouter.InitBaseRouter(PublicGroup) // 注册基础功能路由 不做鉴权
 	// 	IndexRouter.InitInitRouter(PublicGroup) // 自动初始化相关

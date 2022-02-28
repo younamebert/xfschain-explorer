@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"xfschainbrowser/common"
 	"xfschainbrowser/common/apis"
+	"xfschainbrowser/conf"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,15 +17,28 @@ type TxsLinkApi struct {
 func (tx *TxsLinkApi) GetTxs(c *gin.Context) {
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
-		common.SendResponse(c, http.StatusBadRequest, nil, err)
-		return
+		page = conf.Page
 	}
-	pageSize := 20
-	limit := 20
+
+	pageSize, err := strconv.Atoi(c.Query("pageSize"))
+	if err != nil {
+		pageSize = conf.PageSize
+	}
+
+	result := new(apis.Pages)
 	if page > 0 && pageSize > 0 {
-		txs := tx.Handle.HandleBlockTxs.GetTxs(page, pageSize, limit)
-		common.SendResponse(c, http.StatusOK, nil, txs)
-		return
+		counts := tx.Handle.HandleBlockTxs.Count()
+		txs := tx.Handle.HandleBlockTxs.GetTxs(nil, nil, page, pageSize)
+
+		result = &apis.Pages{
+			Page:     int64(page),
+			PageSize: int64(pageSize),
+			Limits:   counts,
+			Data:     txs,
+		}
+		common.SendResponse(c, http.StatusOK, nil, result)
+	} else {
+		common.SendResponse(c, http.StatusOK, nil, result)
 	}
 }
 

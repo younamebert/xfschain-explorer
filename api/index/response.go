@@ -23,3 +23,9 @@ type TxCountByDayResp struct {
 	Timestamp int64 `json:"timestamp"`
 	TxCount   int64 `json:"txcount"`
 }
+
+type SearchResp struct {
+	Block   *model.ChainBlockHeader `json:"block"`
+	Tx      *model.ChainBlockTx     `json:"transfer"`
+	Account *model.ChainAddress     `json:"account"`
+}
