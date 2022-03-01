@@ -1,6 +1,9 @@
 package common
 
-import "math/big"
+import (
+	"math/big"
+	"time"
+)
 
 const (
 	Zero = "0"
@@ -43,4 +46,13 @@ func BigByZip(target *big.Int) uint32 {
 	mantissa <<= 8
 	mantissa = mantissa & 0xffffffff
 	return uint32(mantissa | e)
+}
+
+func GetBeforeTime(_day int) int64 {
+	// now := time.Now()
+	timeZone := time.FixedZone("CST", 8*3600) // 东八区
+	nowTime := time.Now().In(timeZone)
+	beforeTime := nowTime.AddDate(0, 0, _day)
+	beforeTimes := time.Date(beforeTime.Year(), beforeTime.Month(), beforeTime.Day()+1, 0, 0, 0, 0, beforeTime.Location()).Unix()
+	return beforeTimes
 }

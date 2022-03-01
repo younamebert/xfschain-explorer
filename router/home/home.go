@@ -19,4 +19,5 @@ func (r *HomeRouterGroup) HomeRouters(Router *gin.RouterGroup) {
 	group.GET("/status", resources.Status)
 	group.GET("/search", resources.Search)
 	group.GET("/lastest", resources.LatestBlocksAndTxs)
+	group.GET("/txcountbyday", resources.TxCountByDay)
 }

@@ -38,34 +38,37 @@ func (wr *recordHandle) updateAccount(data *model.ChainAddress) error {
 }
 
 func (wr *recordHandle) QueryAccount(addr string) *model.ChainAddress {
-	if v := wr.handleChainAddress.Query("address = ?", addr); v != nil {
+	if v := wr.handleChainAddress.Query("address = ?", addr); len(v) > 0 {
 		return v[0]
 	} else {
 		return nil
 	}
 }
-func (wr *recordHandle) QueryByHash(hash string) *model.ChainBlockHeader {
-	if v := wr.handleBlockHeader.Query("hash = ?", hash); v != nil {
-		return v[0]
-	} else {
-		return nil
+func (wr *recordHandle) QueryByHash(hash string) (result *model.ChainBlockHeader) {
+
+	v := wr.handleBlockHeader.Query("hash = ?", hash)
+	if v != nil {
+		result = v[0]
+		return
 	}
+	return
 }
 
-func (wr *recordHandle) QueryUp() *model.ChainBlockHeader {
-	ra := wr.handleBlockHeader.QueryUp(1)
-	if len(ra) > 1 {
-		return ra[0]
-	} else {
-		return nil
+func (wr *recordHandle) QueryUp() (result *model.ChainBlockHeader) {
+	ra := wr.handleBlockHeader.QuerySort(1, "height desc")
+	if len(ra) > 0 {
+		result = ra[0]
+		return
 	}
+	return
 }
 
-func (wr *recordHandle) QueryDown() *model.ChainBlockHeader {
-	ra := wr.handleBlockHeader.QueryDown(1)
-	if len(ra) > 1 {
-		return ra[0]
-	} else {
-		return nil
+func (wr *recordHandle) QueryDown() (result *model.ChainBlockHeader) {
+	ra := wr.handleBlockHeader.QuerySort(1, "height asc")
+
+	if len(ra) > 0 {
+		result = ra[0]
+		return
 	}
+	return
 }

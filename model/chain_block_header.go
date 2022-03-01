@@ -37,7 +37,6 @@ func (handle *HandleChainBlockHeader) Insert(data *ChainBlockHeader) error {
 	if err := db.Create(&data).Error; err != nil {
 		global.GVA_LOG.Error(err.Error())
 		return err
-
 	}
 	return nil
 }
@@ -46,14 +45,17 @@ func (handle *HandleChainBlockHeader) Query(query, args interface{}) []*ChainBlo
 	db := global.GVA_DB.Table("chain_block_header")
 
 	chainBlockHeaders := make([]*ChainBlockHeader, 0)
-	if err := db.Where(query, args).Find(&chainBlockHeaders).Error; err != nil {
+	if err := db.Where(query, args).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
 		global.GVA_LOG.Error(err.Error())
+		return nil
+	}
+	if len(chainBlockHeaders) == 0 {
 		return nil
 	}
 	return chainBlockHeaders
 }
 
-func (hanle *HandleChainBlockHeader) QueryUp(limit int64) []*ChainBlockHeader {
+func (hanle *HandleChainBlockHeader) QuerySort(limit int64, order string) []*ChainBlockHeader {
 	db := global.GVA_DB.Table("chain_block_header")
 	chainBlockHeaders := make([]*ChainBlockHeader, limit)
 	if err := db.Limit(limit).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
@@ -63,27 +65,27 @@ func (hanle *HandleChainBlockHeader) QueryUp(limit int64) []*ChainBlockHeader {
 	return chainBlockHeaders
 }
 
-func (hanle *HandleChainBlockHeader) QueryDown(limit int64) []*ChainBlockHeader {
-	db := global.GVA_DB.Table("chain_block_header")
-	chainBlockHeaders := make([]*ChainBlockHeader, limit)
-	if err := db.Limit(limit).Order("height asc").Find(&chainBlockHeaders).Error; err != nil {
-		global.GVA_LOG.Error(err.Error())
-		return nil
-	}
-	return chainBlockHeaders
-}
+// func (hanle *HandleChainBlockHeader) QueryDown(limit int64) []*ChainBlockHeader {
+// 	db := global.GVA_DB.Table("chain_block_header")
+// 	chainBlockHeaders := make([]*ChainBlockHeader, limit)
+// 	if err := db.Limit(limit).Order("height asc").Find(&chainBlockHeaders).Error; err != nil {
+// 		global.GVA_LOG.Error(err.Error())
+// 		return nil
+// 	}
+// 	return chainBlockHeaders
+// }
 
-func (handle *HandleChainBlockHeader) QueryBlockHeadersByTime(startTime int64) []*ChainBlockHeader {
-	db := global.GVA_DB.Table("chain_block_header")
+// func (handle *HandleChainBlockHeader) QueryBlockHeadersByTime(startTime int64) []*ChainBlockHeader {
+// 	db := global.GVA_DB.Table("chain_block_header")
 
-	chainBlockHeaders := make([]*ChainBlockHeader, 0)
+// 	chainBlockHeaders := make([]*ChainBlockHeader, 0)
 
-	if err := db.Where("timestamp > ?", startTime).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
-		global.GVA_LOG.Error(err.Error())
-		return nil
-	}
-	return chainBlockHeaders
-}
+// 	if err := db.Where("timestamp > ?", startTime).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
+// 		global.GVA_LOG.Error(err.Error())
+// 		return nil
+// 	}
+// 	return chainBlockHeaders
+// }
 
 func (handle *HandleChainBlockHeader) QueryTxCountSumByTime(startTime int64) int64 {
 	db := global.GVA_DB.Table("chain_block_header")

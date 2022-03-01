@@ -56,7 +56,14 @@ func (ac *AccountLinkApi) Detailed(c *gin.Context) {
 	}
 
 	page, err := strconv.Atoi(c.Query("page"))
-	pageSize := 20
+	if err != nil {
+		page = conf.Page
+	}
+
+	pageSize, err := strconv.Atoi(c.Query("pageSize"))
+	if err != nil {
+		pageSize = conf.PageSize
+	}
 
 	result := new(DetailedResp)
 

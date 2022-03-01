@@ -2,7 +2,6 @@ package chainsync
 
 import (
 	"math/big"
-	"strconv"
 	"sync"
 	"time"
 	"xfschainbrowser/common"
@@ -126,7 +125,7 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 			GasFee:      common.CalcGasFee(gasuesd, tx.GasPrice).String(),
 			Data:        tx.Data,
 			Nonce:       tx.Nonce,
-			Value:       strconv.FormatInt(tx.Value, 10),
+			Value:       tx.Value.String(),
 			// Signature: "",
 			Hash:   tx.Hash,
 			Status: int(receipts.Status),

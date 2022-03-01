@@ -19,4 +19,5 @@ func (r *AccountsRouterGroup) AccountsRouters(Router *gin.RouterGroup) {
 		Handle: apis.NewLinkApi(),
 	}
 	group.GET("/getaccounts", resources.GetAccounts)
+	group.GET("/detailed", resources.Detailed)
 }

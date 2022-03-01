@@ -2,10 +2,10 @@ package api
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 	"net/http"
+	"strconv"
 	"time"
 	"xfschainbrowser/common"
 	"xfschainbrowser/common/apis"
@@ -23,7 +23,7 @@ func (i *IndexLinkApi) Status(c *gin.Context) {
 
 	//最高区块
 	var blockHeader *model.ChainBlockHeader
-	headers := i.Handle.HandleBlockHeader.QueryUp(1)
+	headers := i.Handle.HandleBlockHeader.QuerySort(1, "height desc")
 
 	if headers != nil {
 		blockHeader = headers[0]
@@ -34,8 +34,7 @@ func (i *IndexLinkApi) Status(c *gin.Context) {
 	txs := i.Handle.HandleBlockHeader.QueryTxCountSumByTime(1)
 
 	//24小时区块和交易
-	fmt.Println(startTime)
-	afterBlock := i.Handle.HandleBlockHeader.QueryBlockHeadersByTime(startTime)
+	afterBlock := i.Handle.HandleBlockHeader.Query("timestamp > ?", startTime)
 	var txAmount int64
 	for _, v := range afterBlock {
 		txAmount += int64(v.TxCount)
@@ -58,7 +57,7 @@ func (i *IndexLinkApi) Status(c *gin.Context) {
 func (i *IndexLinkApi) LatestBlocksAndTxs(c *gin.Context) {
 	lastTxsLimit := 10
 	lastBlockLimit := 10
-	blocks := i.Handle.HandleBlockHeader.QueryUp(int64(lastBlockLimit))
+	blocks := i.Handle.HandleBlockHeader.QuerySort(int64(lastBlockLimit), "height desc")
 	txs := i.Handle.HandleBlockTxs.QueryLastBlockTxs(int64(lastTxsLimit))
 
 	latest := &LatestResp{
@@ -101,27 +100,33 @@ func (i *IndexLinkApi) Search(c *gin.Context) {
 }
 
 func (i *IndexLinkApi) TxCountByDay(c *gin.Context) {
-	day := -7
-	startTime := time.Now().AddDate(0, 0, day).Unix()
-	endDay := int(math.Abs(float64(day)))
-	blocks := i.Handle.HandleBlockHeader.QueryBlockHeadersByTime(startTime)
 
-	times := time.Now().AddDate(0, 0, -1)
-	timeDay := time.Date(times.Year(), times.Month(), times.Day(), 0, 0, 0, 0, times.Location()).Unix()
+	param, err := strconv.Atoi(c.Query("p"))
+	if err != nil {
+		param = 7
+	}
 
-	TxCountByDays := make([]*TxCountByDayResp, int(day))
-	for i := 1; i <= endDay; i++ {
+	param = int(math.Abs(float64(param)))
+	paramLenTime := ^param + 2
+	beforeTime := common.GetBeforeTime(paramLenTime)
+	result := make([]*TxCountByDayResp, param)
+
+	blocks := i.Handle.HandleBlockHeader.Query("timestamp > ?", beforeTime)
+	if blocks == nil {
+		common.SendResponse(c, http.StatusOK, nil, result)
+	}
+
+	for i := 1; i <= param; i++ {
+		upTime := int(beforeTime) + (86400 * i)
+		stepTime := upTime - 86400
+		txCountDay := new(TxCountByDayResp)
+		txCountDay.Timestamp = int64(stepTime)
 		for _, v := range blocks {
-			upTime := timeDay + (3600 * 1)
-			stepTime := upTime - 3600
-			if (v.Timestamp < upTime) && (v.Timestamp > stepTime) {
-				TxCountByDayResp := &TxCountByDayResp{
-					Timestamp: stepTime,
-					TxCount:   int64(v.TxCount),
-				}
-				TxCountByDays = append(TxCountByDays, TxCountByDayResp)
+			if (v.Timestamp < int64(upTime)) && (v.Timestamp > int64(stepTime)) {
+				txCountDay.TxCount = txCountDay.TxCount + int64(v.TxCount)
 			}
 		}
+		result[i-1] = txCountDay
 	}
-	common.SendResponse(c, http.StatusOK, nil, TxCountByDays)
+	common.SendResponse(c, http.StatusOK, nil, result)
 }
