@@ -20,6 +20,7 @@ func SendResponse(c *gin.Context, code int, err error, data interface{}) {
 	} else {
 		errStr = "success"
 	}
+
 	c.JSON(http.StatusOK, Response{
 		Code:    code,
 		Message: errStr,

@@ -62,9 +62,12 @@ func (handle *HandleChainAddress) Update(target *ChainAddress) error {
 	return nil
 }
 
-func (handle *HandleChainAddress) Count() int64 {
+func (handle *HandleChainAddress) Count(query, args interface{}) int64 {
 	db := global.GVA_DB.Table("chain_address")
 	var count int64
+	if query != nil && args != nil {
+		db = db.Where(query, args)
+	}
 	if err := db.Count(&count).Error; err != nil {
 		global.GVA_LOG.Error(err.Error())
 		return 0
@@ -72,11 +75,11 @@ func (handle *HandleChainAddress) Count() int64 {
 	return count
 }
 
-func (handle *HandleChainAddress) QueryLikeAccount(query interface{}, where []interface{}) []*ChainAddress {
+func (handle *HandleChainAddress) QueryLikeAccount(query interface{}, where interface{}) []*ChainAddress {
 	addrChains := make([]*ChainAddress, 0)
 	db := global.GVA_DB.Table("chain_address")
 
-	if err := db.Where(query, where...).Find(&addrChains).Error; err != nil {
+	if err := db.Where(query, where).Find(&addrChains).Error; err != nil {
 		global.GVA_LOG.Error(err.Error())
 		return nil
 	}

@@ -20,4 +20,5 @@ func (r *AccountsRouterGroup) AccountsRouters(Router *gin.RouterGroup) {
 	}
 	group.GET("/getaccounts", resources.GetAccounts)
 	group.GET("/detailed", resources.Detailed)
+	group.GET("/detailedtxs", resources.DetailedTxs)
 }

@@ -18,8 +18,8 @@ type ChainBlockTx struct {
 	BlockHeight int64   `gorm:"column:block_height"`
 	BlockTime   int64   `gorm:"column:block_time"`
 	Version     int     `gorm:"column:version"`
-	From        string  `gorm:"column:from"`
-	To          string  `gorm:"column:to"`
+	TxFrom      string  `gorm:"column:tx_from"`
+	TxTo        string  `gorm:"column:tx_to"`
 	GasPrice    float64 `gorm:"column:gas_price"`
 	GasLimit    float64 `gorm:"column:gas_limit"`
 	GasUsed     float64 `gorm:"column:gas_used"`
@@ -55,7 +55,7 @@ func (handle *HandleChainBlockTx) Query(query, args interface{}) []*ChainBlockTx
 	return ChainBlockTxs
 }
 
-func (hanle *HandleChainBlockTx) QueryLastBlockTxs(limit int64) []*ChainBlockTx {
+func (handle *HandleChainBlockTx) QueryLastBlockTxs(limit int64) []*ChainBlockTx {
 	db := global.GVA_DB.Table("chain_block_tx")
 
 	ChainBlockTxs := make([]*ChainBlockTx, limit)
@@ -67,7 +67,7 @@ func (hanle *HandleChainBlockTx) QueryLastBlockTxs(limit int64) []*ChainBlockTx 
 	return ChainBlockTxs
 }
 
-func (hanle *HandleChainBlockTx) GetTxs(query, args interface{}, page, pageSize int) []*ChainBlockTx {
+func (handle *HandleChainBlockTx) GetTxs(query, args interface{}, page, pageSize int) []*ChainBlockTx {
 	db := global.GVA_DB.Table("chain_block_tx")
 
 	ChainBlockTxs := make([]*ChainBlockTx, pageSize)
@@ -78,23 +78,27 @@ func (hanle *HandleChainBlockTx) GetTxs(query, args interface{}, page, pageSize 
 		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
+
 	return ChainBlockTxs
 }
 
-func (hanl *HandleChainBlockTx) QueryLikeTx(query interface{}, where []interface{}) []*ChainBlockTx {
+func (handle *HandleChainBlockTx) QueryLikeTx(query interface{}, where interface{}) []*ChainBlockTx {
 	ChainBlockTxs := make([]*ChainBlockTx, 0)
 	db := global.GVA_DB.Table("chain_block_tx")
 
-	if err := db.Where(query, where...).Order("block_height desc").Find(&ChainBlockTxs).Error; err != nil {
+	if err := db.Where(query, where).Order("block_height desc").Find(&ChainBlockTxs).Error; err != nil {
 		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
 	return ChainBlockTxs
 }
 
-func (hanle *HandleChainBlockTx) Count() int64 {
+func (handle *HandleChainBlockTx) Count(query, args interface{}) int64 {
 	db := global.GVA_DB.Table("chain_block_tx")
 	var count int64
+	if query != nil && args != nil {
+		db = db.Where(query, args)
+	}
 	if err := db.Count(&count).Error; err != nil {
 		global.GVA_LOG.Error(err.Error())
 		return 0

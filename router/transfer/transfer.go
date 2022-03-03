@@ -17,4 +17,5 @@ func (r *TxsRouterGroup) TxsRouters(Router *gin.RouterGroup) {
 	}
 
 	group.GET("/gettxs", resources.GetTxs)
+	group.GET("/detailed", resources.Detailed)
 }

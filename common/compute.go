@@ -22,3 +22,9 @@ func Div(x, y int64) decimal.Decimal {
 	ys := decimal.NewFromInt(y)
 	return xs.Div(ys).Round(2)
 }
+
+// func MulInt(x, y int64) decimal.Decimal {
+// 	xs := decimal.NewFromInt(x)
+// 	ys := decimal.NewFromInt(y)
+// 	subtotal := mul(price, quantity)
+// }

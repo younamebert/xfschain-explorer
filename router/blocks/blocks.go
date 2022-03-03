@@ -19,4 +19,6 @@ func (r *BlocksRouterGroup) BlocksRouters(Router *gin.RouterGroup) {
 		Handle: apis.NewLinkApi(),
 	}
 	group.GET("/getblocks", resources.GetBlocks)
+	group.GET("/detailed", resources.Detailed)
+	group.GET("/detailedtx", resources.DetailedTx)
 }

@@ -49,7 +49,7 @@ func (s *syncService) Stop() {
 func (s *syncService) SyncBlocks() error {
 	s.mx.Lock()
 	defer s.mx.Unlock()
-
+	//  s.mx
 	lastBlock := s.chainMgr.CurrentBHeader()
 	if v := s.recordHandle.QueryByHash(lastBlock.Hash); v != nil {
 		downBlock := s.recordHandle.QueryDown()
@@ -64,6 +64,7 @@ func (s *syncService) SyncBlocks() error {
 	return nil
 }
 
+// func (s *syncService)
 func (s *syncService) syncBlock(lastBlockHash string) error {
 
 	header := s.chainMgr.GetBlockHeaderByHash(lastBlockHash)
@@ -83,6 +84,7 @@ func (s *syncService) syncBlock(lastBlockHash string) error {
 }
 
 func (s *syncService) syncBlockHeader(header *BlockHeader, txCount int) error {
+	rewards, _ := common.BaseCoin2Atto("14")
 	carrier := &model.ChainBlockHeader{
 		Height:           header.Height,
 		Hash:             header.Hash,
@@ -99,7 +101,7 @@ func (s *syncService) syncBlockHeader(header *BlockHeader, txCount int) error {
 		Nonce:            header.Nonce,
 		ExtraNonce:       header.ExtraNonce,
 		TxCount:          txCount,
-		Rewards:          float64(14),
+		Rewards:          rewards.String(),
 	}
 	if err := s.recordHandle.writeChainHeader(carrier); err != nil {
 		return err
@@ -117,8 +119,8 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 			BlockHeight: header.Height,
 			BlockTime:   header.Timestamp,
 			Version:     int(header.Version),
-			From:        tx.From,
-			To:          tx.To,
+			TxFrom:      tx.From,
+			TxTo:        tx.To,
 			GasPrice:    tx.GasPrice,
 			GasLimit:    tx.GasLimit,
 			GasUsed:     gasuesd,

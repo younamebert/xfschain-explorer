@@ -27,7 +27,7 @@ type ChainBlockHeader struct {
 	Nonce            int64   `gorm:"column:nonce"`
 	ExtraNonce       float64 `gorm:"extra_nonce"`
 	TxCount          int     `gorm:"column:tx_count"`
-	Rewards          float64 `gorm:"column:rewards"`
+	Rewards          string  `gorm:"column:rewards"`
 }
 
 func (handle *HandleChainBlockHeader) Insert(data *ChainBlockHeader) error {
@@ -55,7 +55,7 @@ func (handle *HandleChainBlockHeader) Query(query, args interface{}) []*ChainBlo
 	return chainBlockHeaders
 }
 
-func (hanle *HandleChainBlockHeader) QuerySort(limit int64, order string) []*ChainBlockHeader {
+func (handle *HandleChainBlockHeader) QuerySort(limit int64, order string) []*ChainBlockHeader {
 	db := global.GVA_DB.Table("chain_block_header")
 	chainBlockHeaders := make([]*ChainBlockHeader, limit)
 	if err := db.Limit(limit).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
@@ -65,7 +65,7 @@ func (hanle *HandleChainBlockHeader) QuerySort(limit int64, order string) []*Cha
 	return chainBlockHeaders
 }
 
-// func (hanle *HandleChainBlockHeader) QueryDown(limit int64) []*ChainBlockHeader {
+// func (handle *HandleChainBlockHeader) QueryDown(limit int64) []*ChainBlockHeader {
 // 	db := global.GVA_DB.Table("chain_block_header")
 // 	chainBlockHeaders := make([]*ChainBlockHeader, limit)
 // 	if err := db.Limit(limit).Order("height asc").Find(&chainBlockHeaders).Error; err != nil {
@@ -104,7 +104,7 @@ func (handle *HandleChainBlockHeader) QueryTxCountSumByTime(startTime int64) int
 
 }
 
-func (hanle *HandleChainBlockHeader) GetBlocks(query, args interface{}, page, pageSize int) []*ChainBlockHeader {
+func (handle *HandleChainBlockHeader) GetBlocks(query, args interface{}, page, pageSize int) []*ChainBlockHeader {
 	db := global.GVA_DB.Table("chain_block_header")
 
 	chainBlockHeaders := make([]*ChainBlockHeader, pageSize)
@@ -118,20 +118,23 @@ func (hanle *HandleChainBlockHeader) GetBlocks(query, args interface{}, page, pa
 	return chainBlockHeaders
 }
 
-func (hanl *HandleChainBlockHeader) QueryLike(query interface{}, where []interface{}) []*ChainBlockHeader {
+func (handle *HandleChainBlockHeader) QueryLike(query interface{}, where interface{}) []*ChainBlockHeader {
 	chainBlockHeaders := make([]*ChainBlockHeader, 0)
 	db := global.GVA_DB.Table("chain_block_header")
 
-	if err := db.Where(query, where...).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
+	if err := db.Where(query, where).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
 		global.GVA_LOG.Error(err.Error())
 		return nil
 	}
 	return chainBlockHeaders
 }
 
-func (hanle *HandleChainBlockHeader) Count() int64 {
+func (handle *HandleChainBlockHeader) Count(query, args interface{}) int64 {
 	db := global.GVA_DB.Table("chain_block_header")
 	var count int64
+	if query != nil && args != nil {
+		db = db.Where(query, args)
+	}
 	if err := db.Count(&count).Error; err != nil {
 		global.GVA_LOG.Error(err.Error())
 		return 0
