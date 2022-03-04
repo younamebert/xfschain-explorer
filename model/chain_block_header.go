@@ -1,6 +1,7 @@
 package model
 
 import (
+	"xfschainbrowser/common"
 	"xfschainbrowser/global"
 )
 
@@ -35,8 +36,12 @@ func (handle *HandleChainBlockHeader) Insert(data *ChainBlockHeader) error {
 	db := global.GVA_DB.Table("chain_block_header")
 
 	if err := db.Create(&data).Error; err != nil {
-		global.GVA_LOG.Error(err.Error())
-		return err
+		if ok := common.ContainsErr(err.Error(), "Duplicate"); ok {
+			return nil
+		} else {
+			global.GVA_LOG.Error(err.Error())
+			return err
+		}
 	}
 	return nil
 }
@@ -58,7 +63,7 @@ func (handle *HandleChainBlockHeader) Query(query, args interface{}) []*ChainBlo
 func (handle *HandleChainBlockHeader) QuerySort(limit int64, order string) []*ChainBlockHeader {
 	db := global.GVA_DB.Table("chain_block_header")
 	chainBlockHeaders := make([]*ChainBlockHeader, limit)
-	if err := db.Limit(limit).Order("height desc").Find(&chainBlockHeaders).Error; err != nil {
+	if err := db.Limit(limit).Order(order).Find(&chainBlockHeaders).Error; err != nil {
 		global.GVA_LOG.Error(err.Error())
 		return nil
 	}

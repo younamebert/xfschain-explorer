@@ -2,6 +2,7 @@ package model
 
 import (
 	"time"
+	"xfschainbrowser/common"
 	"xfschainbrowser/global"
 )
 
@@ -37,10 +38,16 @@ func (handle *HandleChainBlockTx) Insert(data *ChainBlockTx) error {
 	data.CreateTime = time.Now()
 	data.UpdateTime = time.Now()
 	db := global.GVA_DB.Table("chain_block_tx")
-	if err := db.Create(&data).Error; err != nil {
-		global.GVA_LOG.Error(err.Error())
-		return err
+	err := db.Create(&data).Error
+
+	if err != nil {
+		if common.ContainsErr(err.Error(), "Duplicate") {
+			return nil
+		} else {
+			return err
+		}
 	}
+
 	return nil
 }
 

@@ -17,8 +17,8 @@ type BlocksLinkApi struct {
 func (bc *BlocksLinkApi) GetBlocks(c *gin.Context) {
 
 	var (
-		page     int
-		pageSize int
+		page     int         = 0
+		pageSize int         = 0
 		result   *apis.Pages = new(apis.Pages)
 	)
 	page, err := strconv.Atoi(c.Query("page"))
@@ -34,6 +34,7 @@ func (bc *BlocksLinkApi) GetBlocks(c *gin.Context) {
 	counts := bc.Handle.HandleBlockHeader.Count(nil, nil)
 	blocks := bc.Handle.HandleBlockHeader.GetBlocks(nil, nil, page, pageSize)
 	if len(blocks) == 0 || blocks == nil {
+		// result.Data = blocks
 		common.SendResponse(c, http.StatusOK, nil, nil)
 		return
 	}

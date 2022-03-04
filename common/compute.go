@@ -23,6 +23,15 @@ func Div(x, y int64) decimal.Decimal {
 	return xs.Div(ys).Round(2)
 }
 
+func Divs(x, y int64) decimal.Decimal {
+	if x == 0 || y == 0 {
+		return decimal.NewFromInt(0)
+	}
+	xs := decimal.NewFromInt(x)
+	ys := decimal.NewFromInt(y)
+	return xs.Div(ys)
+}
+
 // func MulInt(x, y int64) decimal.Decimal {
 // 	xs := decimal.NewFromInt(x)
 // 	ys := decimal.NewFromInt(y)

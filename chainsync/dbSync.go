@@ -51,6 +51,7 @@ func (wr *recordHandle) QueryByHash(hash string) (result *model.ChainBlockHeader
 		result = v[0]
 		return
 	}
+	result = nil
 	return
 }
 
@@ -60,6 +61,7 @@ func (wr *recordHandle) QueryUp() (result *model.ChainBlockHeader) {
 		result = ra[0]
 		return
 	}
+	result = nil
 	return
 }
 
@@ -70,5 +72,6 @@ func (wr *recordHandle) QueryDown() (result *model.ChainBlockHeader) {
 		result = ra[0]
 		return
 	}
+	result = nil
 	return
 }

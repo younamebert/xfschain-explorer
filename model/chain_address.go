@@ -2,6 +2,7 @@ package model
 
 import (
 	"time"
+	"xfschainbrowser/common"
 	"xfschainbrowser/global"
 )
 
@@ -35,8 +36,12 @@ func (handle *HandleChainAddress) Insert(data *ChainAddress) error {
 	data.CreateTime = time.Now()
 	data.UpdateTime = time.Now()
 	if err := global.GVA_DB.Create(&data).Error; err != nil {
-		global.GVA_LOG.Error(err.Error())
-		return err
+		if ok := common.ContainsErr(err.Error(), "Duplicate"); ok {
+			return nil
+		} else {
+			global.GVA_LOG.Error(err.Error())
+			return err
+		}
 	}
 	return nil
 }

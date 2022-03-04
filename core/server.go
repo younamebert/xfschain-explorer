@@ -12,11 +12,12 @@ import (
 )
 
 func RunServer() {
+	// gin.SetMode(gin.ReleaseMode)
 	Router := initialize.Routers()
 	// address := fmt.Sprintf(":%d", conf.Addr)
 	s := initServer(conf.Addr, Router)
 	time.Sleep(10 * time.Microsecond)
-	// chainSyncCore()
+	chainSyncCore()
 	global.GVA_LOG.Info("server run success on ", zap.String("address", conf.Addr))
 	global.GVA_LOG.Error(s.ListenAndServe().Error())
 }

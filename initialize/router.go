@@ -1,7 +1,7 @@
 package initialize
 
 import (
-	"xfschainbrowser/global"
+	"fmt"
 	"xfschainbrowser/middleware"
 	"xfschainbrowser/router"
 
@@ -13,7 +13,7 @@ func Routers() *gin.Engine {
 
 	// Router.StaticFile("/", "./dist/index.html") // 前端网页入口页面
 	// Router.Use(middleware.LoadTls())  // 打开就能玩https了
-	global.GVA_LOG.Info("use middleware logger")
+	// global.GVA_LOG.Info("use middleware logger")
 	// 跨域，如需跨域可以打开下面的注释
 	Router.Use(middleware.Cors()) // 直接放行全部跨域请求
 	//Router.Use(middleware.CorsByRules()) // 按照配置的规则放行跨域请求
@@ -70,6 +70,7 @@ func Routers() *gin.Engine {
 
 	// InstallPlugin(PublicGroup, PrivateGroup) // 安装插件
 
-	global.GVA_LOG.Info("router register success")
+	// global.GVA_LOG.Info("router register success")
+	fmt.Println("http server Start!!!")
 	return Router
 }

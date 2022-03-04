@@ -1,11 +1,15 @@
 package chainsync
 
 import (
+	"fmt"
 	"math/big"
+	"strconv"
 	"sync"
 	"time"
 	"xfschainbrowser/common"
+	"xfschainbrowser/common/progressbar"
 	"xfschainbrowser/conf"
+	"xfschainbrowser/global"
 	"xfschainbrowser/model"
 )
 
@@ -13,6 +17,8 @@ type syncService struct {
 	chainMgr     chainMgr
 	recordHandle *recordHandle
 	mx           sync.Mutex
+	// wg           sync.WaitGroup
+	bar progressbar.Bar
 }
 
 func NewSyncService() *syncService {
@@ -23,6 +29,7 @@ func NewSyncService() *syncService {
 }
 
 func (s *syncService) Start() {
+	s.UpdateBar()
 	if err := s.process(); err != nil {
 		panic(err)
 	}
@@ -33,12 +40,12 @@ func (s *syncService) process() error {
 	if err != nil {
 		return err
 	}
+
 	for {
 		select {
 		case <-time.After(timeDur):
-			if err := s.SyncBlocks(); err != nil {
-				return err
-			}
+			go s.SyncBlocks()
+			s.barShow()
 		}
 	}
 }
@@ -46,25 +53,93 @@ func (s *syncService) process() error {
 func (s *syncService) Stop() {
 }
 
-func (s *syncService) SyncBlocks() error {
+func (s *syncService) UpdateBar() {
+	lastHeight := s.recordHandle.handleBlockHeader.QuerySort(1, "height desc")
+	if len(lastHeight) > 0 {
+		s.bar.NewOptionWithGraph(0, lastHeight[0].Height, "#")
+	}
+}
+
+func (s *syncService) barShow() {
+	count := s.recordHandle.handleBlockHeader.Count(nil, nil)
+	s.bar.Play(count)
+	s.bar.Finish()
+
+}
+func (s *syncService) SyncBlocks() {
+	for i := 0; i < conf.SyncMaxBlocksFetch; i++ {
+		go func() {
+			if err := s.syncBlocks(); err != nil {
+				panic(err)
+			}
+		}()
+	}
+}
+
+func (s *syncService) checkIntervalBlockTxs() string {
+
+	//链上的最高块
+	lastBlockChain := s.chainMgr.CurrentBHeader()
+
+	lastBlocks := s.recordHandle.handleBlockHeader.QuerySort(conf.CheckIntervalBlock, "height desc")
+	//数据库没有当前最高高度
+	if len(lastBlocks) < 1 {
+		return lastBlockChain.Hash
+	}
+
+	//链上的最高块和是否存在数据库(同步)
+	if lastBlocks[0].Height < lastBlockChain.Height {
+		disparity := lastBlockChain.Height - lastBlocks[0].Height
+		go s.handleMissBlock(disparity, lastBlocks[0])
+	}
+
+	// 验证最高块的交易数据是否全部同步完成.
+	go s.handleMissTx(lastBlocks)
+
+	//从高往小同步
+	nextBlock := s.recordHandle.handleBlockHeader.QuerySort(1, "height asc")
+
+	return nextBlock[0].HashPrevBlock
+}
+
+// 验证数据库的最高块是否有连续
+func (s *syncService) handleMissBlock(disparity int64, block *model.ChainBlockHeader) {
+	for i := 0; i < int(disparity); i++ {
+		nextSyncBlockNumber := strconv.FormatInt(block.Height+int64(i), 10)
+		pending := s.chainMgr.GetBlockHeaderByNumber(nextSyncBlockNumber)
+		if pending != nil {
+			s.syncBlock(pending.Hash)
+		} else {
+			global.GVA_LOG.Error(fmt.Sprintf("Block bifurcation height:%v", nextSyncBlockNumber))
+		}
+	}
+
+}
+
+// 验证最区块的交易数据是否全部同步完成
+func (s *syncService) handleMissTx(lastBlocks []*model.ChainBlockHeader) {
+	for _, bks := range lastBlocks {
+		txsLen := len(s.chainMgr.GetTxsByBlockHash(bks.Hash))
+		dbTxsLen := s.recordHandle.handleBlockTxs.Count("block_hash =? ", bks.Hash)
+		if txsLen != int(dbTxsLen) {
+			if err := s.syncBlock(bks.Hash); err != nil {
+				global.GVA_LOG.Error(fmt.Sprintf("blockHash:%v blockHeight:%v err func:handleMissTx error:%v", bks.Hash, bks.Height, err.Error()))
+				continue
+			}
+		}
+	}
+}
+
+func (s *syncService) syncBlocks() error {
 	s.mx.Lock()
 	defer s.mx.Unlock()
-	//  s.mx
-	lastBlock := s.chainMgr.CurrentBHeader()
-	if v := s.recordHandle.QueryByHash(lastBlock.Hash); v != nil {
-		downBlock := s.recordHandle.QueryDown()
-		if err := s.syncBlock(downBlock.HashPrevBlock); err != nil {
-			return err
-		}
-	} else {
-		if err := s.syncBlock(lastBlock.Hash); err != nil {
-			return err
-		}
+	lastBlockHash := s.checkIntervalBlockTxs()
+	if err := s.syncBlock(lastBlockHash); err != nil {
+		return err
 	}
 	return nil
 }
 
-// func (s *syncService)
 func (s *syncService) syncBlock(lastBlockHash string) error {
 
 	header := s.chainMgr.GetBlockHeaderByHash(lastBlockHash)

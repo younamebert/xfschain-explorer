@@ -1,6 +1,9 @@
 package common
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 const (
 	SystemErr      = "-20001"
@@ -12,6 +15,10 @@ var (
 	NotDataErr  = errors.New("nonexistent data")
 	NotParamErr = errors.New("parameter cannot be empty")
 )
+
+func ContainsErr(str string, src string) bool {
+	return strings.Contains(str, src)
+}
 
 // func ErrCode(err error) error {
 // 	ms := strings.Fields(err.Error())

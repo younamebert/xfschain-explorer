@@ -2,7 +2,6 @@ package api
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 	"net/http"
@@ -23,29 +22,33 @@ type IndexLinkApi struct {
 func (i *IndexLinkApi) Status(c *gin.Context) {
 
 	var (
-		txAmount      int64
+		txAmount      int64    = 0
 		totalWorkload *big.Int = big.NewInt(0)
 		// tps           decimal.Decimal
 		currentTime   int64 = time.Now().Unix()
 		startTime     int64
 		BlockTimeMulX int64
-		txs           int64
+		txsCount      int64
+		result        *StatusResp = new(StatusResp)
 		blockHeader   *model.ChainBlockHeader
 	)
 
 	//最高区块
 	headers := i.Handle.HandleBlockHeader.QuerySort(1, "height desc")
-
-	if headers != nil {
-		blockHeader = headers[0]
+	if (headers == nil) || (len(headers) == 0) {
+		common.SendResponse(c, http.StatusOK, nil, result)
+		return
 	}
 
-	startTime = time.Now().AddDate(0, 0, -5).Unix()
-	//全部交易
-	txs = i.Handle.HandleBlockHeader.QueryTxCountSumByTime(1)
+	blockHeader = headers[0]
+	startTime = time.Now().AddDate(0, 0, -1).Unix()
 
 	//条件区间小时区块和交易
 	afterBlock := i.Handle.HandleBlockHeader.Query("timestamp > ?", startTime)
+	if (afterBlock == nil) || (len(afterBlock) == 0) {
+		common.SendResponse(c, http.StatusOK, nil, result)
+		return
+	}
 
 	for _, v := range afterBlock {
 		txAmount += int64(v.TxCount)
@@ -62,18 +65,20 @@ func (i *IndexLinkApi) Status(c *gin.Context) {
 	rewards, _ := common.BaseCoin2Atto("14")
 	TxsInBlock := common.Div(txAmount, int64(len(afterBlock)))
 
-	status := &StatusResp{
+	//全部交易
+	txsCount = i.Handle.HandleBlockHeader.QueryTxCountSumByTime(1)
+	result = &StatusResp{
 		LatestHeight: blockHeader.Height,
 		Accounts:     i.Handle.HandleChainAddress.Count(nil, nil),
 		BlockRewards: rewards.String(),
 		BlockTime:    BlockTimeTotalSecond,
-		Transactions: txs,
+		Transactions: txsCount,
 		Power:        totalWorkload.Int64(),
 		Tps:          tpsStatus,
 		TxsInBlock:   TxsInBlock.BigInt().Int64(),
 		Difficulty:   int64(common.BigByZip(new(big.Int).SetInt64(blockHeader.Bits))),
 	}
-	common.SendResponse(c, http.StatusOK, nil, status)
+	common.SendResponse(c, http.StatusOK, nil, result)
 }
 
 func (i *IndexLinkApi) LatestBlocksAndTxs(c *gin.Context) {
@@ -100,7 +105,6 @@ func (i *IndexLinkApi) Search(c *gin.Context) {
 		common.SendResponse(c, http.StatusBadRequest, errors.New("illegal parameter Error"), nil)
 	}
 	params := "%" + param + "%"
-	fmt.Println(len(param))
 
 	blocks := i.Handle.HandleBlockHeader.QueryLike("hash like ?", params)
 	if (blocks != nil) && (len(blocks) > 0) {
@@ -139,28 +143,34 @@ func (i *IndexLinkApi) Search(c *gin.Context) {
 
 func (i *IndexLinkApi) TxCountByDay(c *gin.Context) {
 
+	var (
+		param      int
+		today      time.Time = time.Now()
+		oneday     int       = 86400
+		result     []*TxCountByDayResp
+		startTime  int64
+		beforeTime int64
+	)
 	param, err := strconv.Atoi(c.Query("p"))
 	if err != nil {
 		param = 7
 	}
 
 	param = int(math.Abs(float64(param)))
-	paramLenTime := ^param + 2
-	beforeTime := common.GetBeforeTime(paramLenTime)
-	result := make([]*TxCountByDayResp, param)
 
+	startTime = time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location()).Unix()
+	beforeTime = startTime - int64(oneday*param)
 	blocks := i.Handle.HandleBlockHeader.Query("timestamp > ?", beforeTime)
-	if blocks == nil {
-		common.SendResponse(c, http.StatusOK, nil, result)
-	}
 
+	result = make([]*TxCountByDayResp, param)
 	for i := 1; i <= param; i++ {
-		upTime := int(beforeTime) + (86400 * i)
-		stepTime := upTime - 86400
+		nextTime := startTime - int64((oneday * i))
+		currentTime := nextTime + int64(oneday)
 		txCountDay := new(TxCountByDayResp)
-		txCountDay.Timestamp = int64(stepTime)
+		txCountDay.Timestamp = int64(currentTime)
+
 		for _, v := range blocks {
-			if (v.Timestamp < int64(upTime)) && (v.Timestamp > int64(stepTime)) {
+			if (v.Timestamp < int64(nextTime)) && (v.Timestamp > int64(nextTime)) {
 				txCountDay.TxCount = txCountDay.TxCount + int64(v.TxCount)
 			}
 		}
