@@ -1,7 +1,7 @@
 package initialize
 
 import (
-	"fmt"
+	"xfschainbrowser/global"
 	"xfschainbrowser/middleware"
 	"xfschainbrowser/router"
 
@@ -70,7 +70,7 @@ func Routers() *gin.Engine {
 
 	// InstallPlugin(PublicGroup, PrivateGroup) // 安装插件
 
-	// global.GVA_LOG.Info("router register success")
-	fmt.Println("http server Start!!!")
+	global.GVA_LOG.Info("router register success")
+	// fmt.Println("http server Start!!!")
 	return Router
 }

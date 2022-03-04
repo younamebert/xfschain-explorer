@@ -35,20 +35,22 @@ func (i *IndexLinkApi) Status(c *gin.Context) {
 
 	//最高区块
 	headers := i.Handle.HandleBlockHeader.QuerySort(1, "height desc")
-	if (headers == nil) || (len(headers) == 0) {
+	if len(headers) < 1 {
 		common.SendResponse(c, http.StatusOK, nil, result)
 		return
 	}
 
 	blockHeader = headers[0]
-	startTime = time.Now().AddDate(0, 0, -1).Unix()
+	startTime = time.Now().Unix() - 86400
 
 	//条件区间小时区块和交易
 	afterBlock := i.Handle.HandleBlockHeader.Query("timestamp > ?", startTime)
-	if (afterBlock == nil) || (len(afterBlock) == 0) {
-		common.SendResponse(c, http.StatusOK, nil, result)
-		return
-	}
+	afterBlockLen := len(afterBlock)
+	// if len(afterBlock) < 1 {
+	// 	fmt.Println(12212121)
+	// 	common.SendResponse(c, http.StatusOK, nil, result)
+	// 	return
+	// }
 
 	for _, v := range afterBlock {
 		txAmount += int64(v.TxCount)
@@ -59,11 +61,11 @@ func (i *IndexLinkApi) Status(c *gin.Context) {
 	tpsStatus, _ := common.Div(txAmount, 24*60*60).Float64()
 
 	BlockTimeMulX = currentTime - startTime
-	BlockTimeTotal := common.Div(BlockTimeMulX, int64(len(afterBlock)))
+	BlockTimeTotal := common.Div(BlockTimeMulX, int64(afterBlockLen))
 	BlockTimeTotalSecond, _ := BlockTimeTotal.Float64()
 
 	rewards, _ := common.BaseCoin2Atto("14")
-	TxsInBlock := common.Div(txAmount, int64(len(afterBlock)))
+	TxsInBlock := common.Div(txAmount, int64(afterBlockLen))
 
 	//全部交易
 	txsCount = i.Handle.HandleBlockHeader.QueryTxCountSumByTime(1)

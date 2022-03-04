@@ -97,7 +97,7 @@ func (ac *AccountLinkApi) DetailedTxs(c *gin.Context) {
 	}
 
 	txs := ac.Handle.HandleBlockTxs.GetTxs(`tx_from = ?`, addr, page, pageSize)
-	if len(txs) == 0 || txs == nil {
+	if len(txs) < 1 {
 		common.SendResponse(c, http.StatusOK, nil, nil)
 		return
 	}
