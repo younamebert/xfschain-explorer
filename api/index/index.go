@@ -57,6 +57,7 @@ func (i *IndexLinkApi) Status(c *gin.Context) {
 		blockWorkload := common.BigByZip(new(big.Int).SetInt64(v.Bits))
 		totalWorkload.Add(totalWorkload, new(big.Int).SetUint64(uint64(blockWorkload)))
 	}
+
 	totalWorkload.Div(totalWorkload, big.NewInt(24*60*60))
 	tpsStatus, _ := common.Div(txAmount, 24*60*60).Float64()
 
@@ -84,8 +85,29 @@ func (i *IndexLinkApi) Status(c *gin.Context) {
 }
 
 func (i *IndexLinkApi) LatestBlocksAndTxs(c *gin.Context) {
-	lastTxsLimit := 10
-	lastBlockLimit := 10
+
+	var (
+		lastTxsLimit   int = 10
+		lastBlockLimit int = 10
+	)
+
+	txlimit, err := strconv.Atoi(c.Query("txlimit"))
+	if err == nil {
+		lastTxsLimit = txlimit
+	}
+
+	blockLimit, err := strconv.Atoi(c.Query("blocklimit"))
+	if err == nil {
+		lastBlockLimit = blockLimit
+	}
+
+	// txlimit = c.Query("txlimit")
+	// if addr == "" {
+	// 	common.SendResponse(c, http.StatusBadRequest, common.NotParamErr, nil)
+	// 	return
+	// // }
+	// lastTxsLimit := 10
+	// lastBlockLimit := 10
 	blocks := i.Handle.HandleBlockHeader.QuerySort(int64(lastBlockLimit), "height desc")
 	txs := i.Handle.HandleBlockTxs.QueryLastBlockTxs(int64(lastTxsLimit))
 

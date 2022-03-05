@@ -22,14 +22,15 @@ type syncService struct {
 }
 
 func NewSyncService() *syncService {
-	return &syncService{
+	newsyncService := &syncService{
 		chainMgr:     newsyncMgr(),
 		recordHandle: newRecordHandle(),
 	}
+	newsyncService.UpdateBar()
+	return newsyncService
 }
 
 func (s *syncService) Start() {
-	s.UpdateBar()
 	if err := s.process(); err != nil {
 		panic(err)
 	}
@@ -46,11 +47,12 @@ func (s *syncService) process() error {
 		case <-time.After(timeDur):
 			go s.SyncBlocks()
 			s.barShow()
-		}
+
 	}
 }
 
-func (s *syncService) Stop() {
+func (s *syncService) Stop(){
+
 }
 
 func (s *syncService) UpdateBar() {
@@ -61,11 +63,27 @@ func (s *syncService) UpdateBar() {
 }
 
 func (s *syncService) barShow() {
-	count := s.recordHandle.handleBlockHeader.Count(nil, nil)
-	s.bar.Play(count)
-	s.bar.Finish()
+	var (
+		count         int64 = 0
+		lastHeight    int64 = 0
+		currentHeight int64 = 0
+	)
+	count = s.recordHandle.handleBlockHeader.Count(nil, nil)
+	lastBlock := s.recordHandle.handleBlockHeader.QuerySort(1, "height desc")
+	if len(lastBlock) > 0 {
+		lastHeight = lastBlock[0].Height
+	}
 
+	currentBlock := s.recordHandle.handleBlockHeader.QuerySort(1, "height asc")
+
+	if len(currentBlock) > 0 {
+		currentHeight = currentBlock[0].Height
+	}
+
+	s.bar.Play(count, lastHeight, currentHeight)
+	s.bar.Finish()
 }
+
 func (s *syncService) SyncBlocks() {
 	for i := 0; i < conf.SyncMaxBlocksFetch; i++ {
 		go func() {
@@ -89,8 +107,11 @@ func (s *syncService) checkIntervalBlockTxs() string {
 
 	//链上的最高块和是否存在数据库(同步)
 	if lastBlocks[0].Height < lastBlockChain.Height {
+		// 链最高和本地最高
 		disparity := lastBlockChain.Height - lastBlocks[0].Height
 		go s.handleMissBlock(disparity, lastBlocks[0])
+		// 需要更新bar
+		s.UpdateBar()
 	}
 
 	// 验证最高块的交易数据是否全部同步完成.
@@ -104,16 +125,15 @@ func (s *syncService) checkIntervalBlockTxs() string {
 
 // 验证数据库的最高块是否有连续
 func (s *syncService) handleMissBlock(disparity int64, block *model.ChainBlockHeader) {
-	for i := 0; i < int(disparity); i++ {
+	for i := 1; i <= int(disparity); i++ {
 		nextSyncBlockNumber := strconv.FormatInt(block.Height+int64(i), 10)
-		pending := s.chainMgr.GetBlockHeaderByNumber(nextSyncBlockNumber)
-		if pending != nil {
-			s.syncBlock(pending.Hash)
+		addBlock := s.chainMgr.GetBlockHeaderByNumber(nextSyncBlockNumber)
+		if addBlock != nil && (addBlock.HashPrevBlock == block.Hash) {
+			s.syncBlock(addBlock.Hash)
 		} else {
 			global.GVA_LOG.Error(fmt.Sprintf("Block bifurcation height:%v", nextSyncBlockNumber))
 		}
 	}
-
 }
 
 // 验证最区块的交易数据是否全部同步完成
@@ -137,6 +157,7 @@ func (s *syncService) syncBlocks() error {
 	if err := s.syncBlock(lastBlockHash); err != nil {
 		return err
 	}
+	// s.barShow()
 	return nil
 }
 
@@ -206,9 +227,11 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 			// Signature: "",
 			Hash:   tx.Hash,
 			Status: int(receipts.Status),
-			Type:   1,
+			Type:   0,
 		}
-
+		if carrier.TxTo == "" {
+			carrier.Type = 1
+		}
 		if err := s.syncAccouts(header, tx); err != nil {
 			return err
 		}
@@ -243,6 +266,9 @@ func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr s
 		carrier.Code = objChain.Code
 		carrier.StateRoot = objChain.StateRoot
 		carrier.Type = 1
+		if carrier.Code == "" {
+			carrier.Type = 0
+		}
 		carrier.Display = 1
 		carrier.TxCount = 0
 		carrier.FromStateRoot = header.StateRoot
@@ -256,25 +282,22 @@ func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr s
 
 		return s.recordHandle.writeAccount(carrier)
 	} else {
+		carrier.Address = tx.From
+		carrier.Balance = objChain.Balance
+		carrier.Nonce = objChain.Nonce
+		carrier.Extra = objChain.Extra
+		carrier.Code = objChain.Code
+		carrier.StateRoot = objChain.StateRoot
+		carrier.FromStateRoot = header.StateRoot
+		carrier.FromBlockHeight = header.Height
+		carrier.FromBlockHash = header.Hash
+		carrier.TxCount = obj.TxCount + 1
 		if header.Height > obj.CreateFromBlockHeight {
 			carrier.CreateFromBlockHash = header.Hash
 			carrier.CreateFromBlockHeight = header.Height
 			carrier.CreateFromBlockHash = header.Hash
 			carrier.CreateFromStateRoot = header.StateRoot
 			carrier.CreateFromTxHash = tx.Hash
-			carrier.TxCount = obj.TxCount + 1
-		}
-		if header.Height < obj.CreateFromBlockHeight {
-			carrier.Address = tx.From
-			carrier.Balance = objChain.Balance
-			carrier.Nonce = objChain.Nonce
-			carrier.Extra = objChain.Extra
-			carrier.Code = objChain.Code
-			carrier.StateRoot = objChain.StateRoot
-			carrier.FromStateRoot = header.StateRoot
-			carrier.FromBlockHeight = header.Height
-			carrier.FromBlockHash = header.Hash
-
 		}
 		return s.recordHandle.updateAccount(carrier)
 	}
