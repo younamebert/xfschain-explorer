@@ -1,6 +1,8 @@
 package chainsync
 
-import "math/big"
+import (
+	"github.com/shopspring/decimal"
+)
 
 //有hash
 type BlockHeader struct {
@@ -44,14 +46,14 @@ type Receipt struct {
 }
 
 type Transaction struct {
-	Version   int64    `json:"version"`
-	To        string   `json:"to"`
-	GasPrice  float64  `json:"gas_price"`
-	GasLimit  float64  `json:"gas_limit"`
-	Data      string   `json:"data"`
-	Nonce     int64    `json:"nonce"`
-	Value     *big.Int `json:"value"`
-	Signature string   `json:"signature"`
-	From      string   `json:"from"`
-	Hash      string   `json:"hash"`
+	Version   int64           `json:"version"`
+	To        string          `json:"to"`
+	GasPrice  float64         `json:"gas_price"`
+	GasLimit  float64         `json:"gas_limit"`
+	Data      string          `json:"data"`
+	Nonce     int64           `json:"nonce"`
+	Value     decimal.Decimal `json:"value"`
+	Signature string          `json:"signature"`
+	From      string          `json:"from"`
+	Hash      string          `json:"hash"`
 }

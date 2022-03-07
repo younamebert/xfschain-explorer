@@ -27,7 +27,7 @@ func (bar *Bar) NewOption(start, total int64) {
 }
 
 func (bar *Bar) getPercent() int64 {
-	return int64(float32(bar.cur) / float32(bar.total) * 100)
+	return int64(float64(bar.cur) / float64(bar.total) * 100)
 }
 
 func (bar *Bar) NewOptionWithGraph(start, total int64, graph string) {

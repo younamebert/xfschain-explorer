@@ -48,10 +48,10 @@ func (s *syncService) process() error {
 			go s.SyncBlocks()
 			s.barShow()
 
+		}
 	}
 }
-
-func (s *syncService) Stop(){
+func (s *syncService) Stop() {
 
 }
 

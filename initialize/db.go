@@ -8,7 +8,6 @@ import (
 	"strings"
 	"xfschainbrowser/common"
 	"xfschainbrowser/conf"
-	"xfschainbrowser/global"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -47,7 +46,7 @@ func installMysql(db *gorm.DB) error {
 			continue
 		}
 		if err := db.Exec(sql).Error; err != nil {
-			global.GVA_LOG.Error(err.Error())
+			// global.GVA_LOG.Error(err.Error())
 			// return err
 			continue
 		}
