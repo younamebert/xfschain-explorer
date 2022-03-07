@@ -2,6 +2,7 @@ package progressbar
 
 import (
 	"fmt"
+	"xfschainbrowser/global"
 )
 
 type Bar struct {
@@ -10,8 +11,8 @@ type Bar struct {
 	total         int64  //总进度
 	rate          string //进度条
 	graph         string //显示符号
-	lastHeight    int64  //
-	currentHeight int64  //
+	lastHeight    int64  //最高的区块
+	currentHeight int64  //当前高度
 }
 
 func (bar *Bar) NewOption(start, total int64) {
@@ -41,16 +42,16 @@ func (bar *Bar) Play(cur, lastHeight, currentHeight int64) {
 	bar.lastHeight = lastHeight
 	last := bar.percent
 	bar.percent = bar.getPercent()
-	// if bar.percent == last {
-	// 	return
-	// }
+
 	if bar.percent != last && bar.percent%2 == 0 {
 		bar.rate += bar.graph
 	}
-	fmt.Printf("\r[%-50s]%3d%%  %8d/%d currentHeight=%v lastHeight=%v", bar.rate, bar.percent, bar.cur, bar.total, currentHeight, lastHeight)
+	global.GVA_LOG.Info(fmt.Sprintf("sync mode:desc order synchronous progress: %3d%%  %8d/%d currentHeight=%v lastHeight=%v", bar.percent, bar.cur, bar.total, currentHeight, lastHeight))
+	// fmt.Printf("\r[%-50s]%3d%%  %8d/%d currentHeight=%v lastHeight=%v", bar.rate, bar.percent, bar.cur, bar.total, currentHeight, lastHeight)
+	// fmt.Sprintf("\r%3d%%  %8d/%d currentHeight=%v lastHeight=%v", bar.percent, bar.cur, bar.total, currentHeight, lastHeight)
 	// fmt.Printf("lastHeight=%v currentHeight=%v")
 }
 
 func (bar *Bar) Finish() {
-	fmt.Println()
+	// fmt.Println()
 }

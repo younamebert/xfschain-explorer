@@ -17,8 +17,8 @@ type syncService struct {
 	chainMgr     chainMgr
 	recordHandle *recordHandle
 	mx           sync.Mutex
-	// wg           sync.WaitGroup
-	bar progressbar.Bar
+	wg           sync.WaitGroup
+	bar          progressbar.Bar
 }
 
 func NewSyncService() *syncService {
@@ -47,7 +47,6 @@ func (s *syncService) process() error {
 		case <-time.After(timeDur):
 			go s.SyncBlocks()
 			s.barShow()
-
 		}
 	}
 }
@@ -69,15 +68,21 @@ func (s *syncService) barShow() {
 		currentHeight int64 = 0
 	)
 	count = s.recordHandle.handleBlockHeader.Count(nil, nil)
-	lastBlock := s.recordHandle.handleBlockHeader.QuerySort(1, "height desc")
-	if len(lastBlock) > 0 {
-		lastHeight = lastBlock[0].Height
-	}
 
 	currentBlock := s.recordHandle.handleBlockHeader.QuerySort(1, "height asc")
 
 	if len(currentBlock) > 0 {
+
 		currentHeight = currentBlock[0].Height
+		// 向下同步完成不在需要打印同步进度
+		if currentHeight == 1 {
+			return
+		}
+	}
+
+	lastBlock := s.recordHandle.handleBlockHeader.QuerySort(1, "height desc")
+	if len(lastBlock) > 0 {
+		lastHeight = lastBlock[0].Height
 	}
 
 	s.bar.Play(count, lastHeight, currentHeight)
@@ -125,15 +130,18 @@ func (s *syncService) checkIntervalBlockTxs() string {
 
 // 验证数据库的最高块是否有连续
 func (s *syncService) handleMissBlock(disparity int64, block *model.ChainBlockHeader) {
+
+	s.wg.Add(int(disparity))
 	for i := 1; i <= int(disparity); i++ {
 		nextSyncBlockNumber := strconv.FormatInt(block.Height+int64(i), 10)
 		addBlock := s.chainMgr.GetBlockHeaderByNumber(nextSyncBlockNumber)
 		if addBlock != nil && (addBlock.HashPrevBlock == block.Hash) {
 			s.syncBlock(addBlock.Hash)
-		} else {
-			global.GVA_LOG.Error(fmt.Sprintf("Block bifurcation height:%v", nextSyncBlockNumber))
+			global.GVA_LOG.Info(fmt.Sprintf("sync mode:asc order fetch block targetHeight:%v currentHeight:%v", nextSyncBlockNumber, block.Height))
 		}
+		s.wg.Done()
 	}
+	s.wg.Wait()
 }
 
 // 验证最区块的交易数据是否全部同步完成
@@ -210,6 +218,8 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 	for _, tx := range txs {
 		receipts := s.chainMgr.GetReceiptByHash(tx.Hash)
 		gasuesd, _ := new(big.Float).SetInt64(receipts.GasUsed).Float64()
+
+		// if err!=nil{}
 		carrier := &model.ChainBlockTx{
 			BlockHash:   header.Hash,
 			BlockHeight: header.Height,
