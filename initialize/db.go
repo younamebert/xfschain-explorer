@@ -27,7 +27,6 @@ func Gorm() *gorm.DB {
 		fmt.Printf("installMysql err:%v\n", err)
 		os.Exit(1)
 	}
-
 	// defer db.Close()
 	db.SingularTable(true)
 	return db

@@ -16,6 +16,7 @@ type chainMgr interface {
 	GetBlockHeaderByHash(blockHash string) *BlockHeader
 	GetAccountInfo(address string) *AccountState
 	GetBlockHeaderByNumber(blocknumber string) *BlockHeader
+	CheckResponse() error
 }
 
 type syncMgr struct {
@@ -29,11 +30,17 @@ func newsyncMgr() *syncMgr {
 	}
 }
 
+func (syncMgr *syncMgr) CheckResponse() error {
+	lastBlockHeader := new(BlockHeader)
+	return syncMgr.xfsClient.CallMethod(1, "Chain.Head", nil, &lastBlockHeader)
+}
+
+// func (syncMgr *syncMgr)
 //CurrentBHeader 获取最新的高度
 func (syncMgr *syncMgr) CurrentBHeader() *BlockHeader {
 	lastBlockHeader := new(BlockHeader)
 	if err := syncMgr.xfsClient.CallMethod(1, "Chain.Head", nil, &lastBlockHeader); err != nil {
-		global.GVA_LOG.Panic("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
+		global.GVA_LOG.Warn("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
 		return nil
 	}
 	return lastBlockHeader
@@ -46,7 +53,7 @@ func (syncMgr *syncMgr) GetReceiptByHash(txhash string) *Receipt {
 	}
 	recs := new(Receipt)
 	if err := syncMgr.xfsClient.CallMethod(1, "Chain.GetReceiptByHash", &req, &recs); err != nil {
-		global.GVA_LOG.Panic("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
+		global.GVA_LOG.Warn("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
 		return nil
 	}
 	return recs
@@ -59,7 +66,7 @@ func (syncMgr *syncMgr) GetTxsByBlockHash(blockHash string) []*Transaction {
 	}
 	txs := make([]*Transaction, 0)
 	if err := syncMgr.xfsClient.CallMethod(1, "Chain.GetTxsByBlockHash", &req, &txs); err != nil {
-		global.GVA_LOG.Panic("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
+		global.GVA_LOG.Warn("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
 		return nil
 	}
 	return txs
@@ -72,7 +79,7 @@ func (syncMgr *syncMgr) GetBlockHeaderByNumber(blocknumber string) *BlockHeader 
 	}
 	rets := new(BlockHeader)
 	if err := syncMgr.xfsClient.CallMethod(1, "Chain.GetBlockHeaderByNumber", &req, &rets); err != nil {
-		global.GVA_LOG.Panic("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
+		global.GVA_LOG.Warn("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
 		return nil
 	}
 	return rets
@@ -85,7 +92,7 @@ func (syncMgr *syncMgr) GetBlockHeaderByHash(blockHash string) *BlockHeader {
 	}
 	rets := new(BlockHeader)
 	if err := syncMgr.xfsClient.CallMethod(1, "Chain.GetBlockHeaderByHash", &req, &rets); err != nil {
-		global.GVA_LOG.Panic("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
+		global.GVA_LOG.Warn("code:"+common.SystemErr+" err:", zap.Any(" error:", err.Error()))
 		return nil
 	}
 	return rets

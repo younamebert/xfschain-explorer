@@ -4,6 +4,8 @@ import (
 	"time"
 	"xfschainbrowser/common"
 	"xfschainbrowser/global"
+
+	"github.com/shopspring/decimal"
 )
 
 // type  HandleChainBlockTxExternal interface{
@@ -14,24 +16,24 @@ type HandleChainBlockTx struct {
 
 type ChainBlockTx struct {
 	Basics
-	Id          int64   `gorm:"column:id"`
-	BlockHash   string  `gorm:"column:block_hash"`
-	BlockHeight int64   `gorm:"column:block_height"`
-	BlockTime   int64   `gorm:"column:block_time"`
-	Version     int     `gorm:"column:version"`
-	TxFrom      string  `gorm:"column:tx_from"`
-	TxTo        string  `gorm:"column:tx_to"`
-	GasPrice    float64 `gorm:"column:gas_price"`
-	GasLimit    float64 `gorm:"column:gas_limit"`
-	GasUsed     float64 `gorm:"column:gas_used"`
-	GasFee      string  `gorm:"column:gas_fee"`
-	Data        string  `gorm:"column:data"`
-	Nonce       int64   `gorm:"column:nonce"`
-	Value       string  `gorm:"column:value"`
-	Signature   string  `gorm:"column:signature"`
-	Hash        string  `gorm:"column:hash"`
-	Status      int     `gorm:"column:status"`
-	Type        int     `gorm:"column:type"`
+	Id          int64           `gorm:"column:id"`
+	BlockHash   string          `gorm:"column:block_hash"`
+	BlockHeight int64           `gorm:"column:block_height"`
+	BlockTime   int64           `gorm:"column:block_time"`
+	Version     int             `gorm:"column:version"`
+	TxFrom      string          `gorm:"column:tx_from"`
+	TxTo        string          `gorm:"column:tx_to"`
+	GasPrice    decimal.Decimal `gorm:"column:gas_price"`
+	GasLimit    decimal.Decimal `gorm:"column:gas_limit"`
+	GasUsed     decimal.Decimal `gorm:"column:gas_used"`
+	GasFee      string          `gorm:"column:gas_fee"`
+	Data        string          `gorm:"column:data"`
+	Nonce       int64           `gorm:"column:nonce"`
+	Value       string          `gorm:"column:value"`
+	Signature   string          `gorm:"column:signature"`
+	Hash        string          `gorm:"column:hash"`
+	Status      int             `gorm:"column:status"`
+	Type        int             `gorm:"column:type"`
 }
 
 func (handle *HandleChainBlockTx) Insert(data *ChainBlockTx) error {

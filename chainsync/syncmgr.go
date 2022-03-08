@@ -2,7 +2,6 @@ package chainsync
 
 import (
 	"fmt"
-	"math/big"
 	"strconv"
 	"sync"
 	"time"
@@ -11,6 +10,8 @@ import (
 	"xfschainbrowser/conf"
 	"xfschainbrowser/global"
 	"xfschainbrowser/model"
+
+	"github.com/shopspring/decimal"
 )
 
 type syncService struct {
@@ -41,17 +42,28 @@ func (s *syncService) process() error {
 	if err != nil {
 		return err
 	}
-
 	for {
 		select {
 		case <-time.After(timeDur):
-			go s.SyncBlocks()
-			s.barShow()
+			err := s.checkResponse()
+			if err != nil {
+				global.GVA_LOG.Error("chain service not found")
+				continue
+			} else {
+				go s.SyncBlocks()
+				s.barShow()
+			}
+
 		}
 	}
 }
+
 func (s *syncService) Stop() {
 
+}
+
+func (s *syncService) checkResponse() error {
+	return s.chainMgr.CheckResponse()
 }
 
 func (s *syncService) UpdateBar() {
@@ -100,16 +112,19 @@ func (s *syncService) SyncBlocks() {
 }
 
 func (s *syncService) checkIntervalBlockTxs() string {
-
 	//链上的最高块
-	lastBlockChain := s.chainMgr.CurrentBHeader()
+	var (
+		lastBlockChain *BlockHeader              = new(BlockHeader)
+		lastBlocks     []*model.ChainBlockHeader = make([]*model.ChainBlockHeader, 0)
+		nextBlock      []*model.ChainBlockHeader = make([]*model.ChainBlockHeader, 0)
+	)
+	lastBlockChain = s.chainMgr.CurrentBHeader()
 
-	lastBlocks := s.recordHandle.handleBlockHeader.QuerySort(conf.CheckIntervalBlock, "height desc")
+	lastBlocks = s.recordHandle.handleBlockHeader.QuerySort(conf.CheckIntervalBlock, "height desc")
 	//数据库没有当前最高高度
 	if len(lastBlocks) < 1 {
 		return lastBlockChain.Hash
 	}
-
 	//链上的最高块和是否存在数据库(同步)
 	if lastBlocks[0].Height < lastBlockChain.Height {
 		// 链最高和本地最高
@@ -123,7 +138,7 @@ func (s *syncService) checkIntervalBlockTxs() string {
 	go s.handleMissTx(lastBlocks)
 
 	//从高往小同步
-	nextBlock := s.recordHandle.handleBlockHeader.QuerySort(1, "height asc")
+	nextBlock = s.recordHandle.handleBlockHeader.QuerySort(1, "height asc")
 
 	return nextBlock[0].HashPrevBlock
 }
@@ -131,13 +146,15 @@ func (s *syncService) checkIntervalBlockTxs() string {
 // 验证数据库的最高块是否有连续
 func (s *syncService) handleMissBlock(disparity int64, block *model.ChainBlockHeader) {
 
-	s.wg.Add(int(disparity))
-	for i := 1; i <= int(disparity); i++ {
+	s.wg.Add(conf.HandleMissBlockFetch)
+	for i := 1; i <= conf.HandleMissBlockFetch; i++ {
 		nextSyncBlockNumber := strconv.FormatInt(block.Height+int64(i), 10)
 		addBlock := s.chainMgr.GetBlockHeaderByNumber(nextSyncBlockNumber)
 		if addBlock != nil && (addBlock.HashPrevBlock == block.Hash) {
-			s.syncBlock(addBlock.Hash)
+			go s.syncBlock(addBlock.Hash)
 			global.GVA_LOG.Info(fmt.Sprintf("sync mode:asc order fetch block targetHeight:%v currentHeight:%v", nextSyncBlockNumber, block.Height))
+		} else {
+			continue
 		}
 		s.wg.Done()
 	}
@@ -217,9 +234,14 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 
 	for _, tx := range txs {
 		receipts := s.chainMgr.GetReceiptByHash(tx.Hash)
-		gasuesd, _ := new(big.Float).SetInt64(receipts.GasUsed).Float64()
-
-		// if err!=nil{}
+		gasuesd := decimal.NewFromInt(receipts.GasUsed)
+		gasPice := decimal.NewFromFloat(tx.GasPrice)
+		gasLimit := decimal.NewFromFloat(tx.GasLimit)
+		// global.GVA_LOG         .Warn(err.Error())
+		gasuesdFloat, ok := gasuesd.Float64()
+		if !ok {
+			global.GVA_LOG.Warn(fmt.Sprintf("txhash:%v blockhash:%v blockheight:%v", tx.Hash, header.Hash, header.Height))
+		}
 		carrier := &model.ChainBlockTx{
 			BlockHash:   header.Hash,
 			BlockHeight: header.Height,
@@ -227,10 +249,10 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 			Version:     int(header.Version),
 			TxFrom:      tx.From,
 			TxTo:        tx.To,
-			GasPrice:    tx.GasPrice,
-			GasLimit:    tx.GasLimit,
+			GasPrice:    gasPice,
+			GasLimit:    gasLimit,
 			GasUsed:     gasuesd,
-			GasFee:      common.CalcGasFee(gasuesd, tx.GasPrice).String(),
+			GasFee:      common.CalcGasFee(gasuesdFloat, tx.GasPrice).String(),
 			Data:        tx.Data,
 			Nonce:       tx.Nonce,
 			Value:       tx.Value.String(),
@@ -264,8 +286,13 @@ func (s *syncService) syncAccouts(header *BlockHeader, tx *Transaction) error {
 }
 
 func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr string) error {
-	obj := s.recordHandle.QueryAccount(addr)
-	objChain := s.chainMgr.GetAccountInfo(addr)
+	var (
+		obj      *model.ChainAddress = nil
+		objChain *AccountState       = new(AccountState)
+	)
+
+	obj = s.recordHandle.QueryAccount(addr)
+	objChain = s.chainMgr.GetAccountInfo(addr)
 
 	carrier := new(model.ChainAddress)
 	if obj == nil {
