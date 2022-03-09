@@ -120,11 +120,21 @@ func (s *syncService) checkIntervalBlockTxs() string {
 	)
 	lastBlockChain = s.chainMgr.CurrentBHeader()
 
+	//低到高
 	lastBlocks = s.recordHandle.handleBlockHeader.QuerySort(conf.CheckIntervalBlock, "height desc")
+
+	//从高往小同步
+	nextBlock = s.recordHandle.handleBlockHeader.QuerySort(1, "height asc")
+
+	if lastBlockChain == nil {
+		return nextBlock[0].HashPrevBlock
+	}
+
 	//数据库没有当前最高高度
 	if len(lastBlocks) < 1 {
 		return lastBlockChain.Hash
 	}
+
 	//链上的最高块和是否存在数据库(同步)
 	if lastBlocks[0].Height < lastBlockChain.Height {
 		// 链最高和本地最高
@@ -137,17 +147,22 @@ func (s *syncService) checkIntervalBlockTxs() string {
 	// 验证最高块的交易数据是否全部同步完成.
 	go s.handleMissTx(lastBlocks)
 
-	//从高往小同步
-	nextBlock = s.recordHandle.handleBlockHeader.QuerySort(1, "height asc")
-
 	return nextBlock[0].HashPrevBlock
 }
 
 // 验证数据库的最高块是否有连续
 func (s *syncService) handleMissBlock(disparity int64, block *model.ChainBlockHeader) {
+	var handleMissBlockFetchNumber int = 0
 
-	s.wg.Add(conf.HandleMissBlockFetch)
-	for i := 1; i <= conf.HandleMissBlockFetch; i++ {
+	//区块差小于设置同步跨度差，直接disparity number
+	if disparity > int64(conf.HandleMissBlockFetch) {
+		handleMissBlockFetchNumber = conf.HandleMissBlockFetch
+	} else {
+		handleMissBlockFetchNumber = int(disparity)
+	}
+
+	s.wg.Add(handleMissBlockFetchNumber)
+	for i := 1; i <= handleMissBlockFetchNumber; i++ {
 		nextSyncBlockNumber := strconv.FormatInt(block.Height+int64(i), 10)
 		addBlock := s.chainMgr.GetBlockHeaderByNumber(nextSyncBlockNumber)
 		if addBlock != nil && (addBlock.HashPrevBlock == block.Hash) {
@@ -187,20 +202,26 @@ func (s *syncService) syncBlocks() error {
 }
 
 func (s *syncService) syncBlock(lastBlockHash string) error {
-
 	header := s.chainMgr.GetBlockHeaderByHash(lastBlockHash)
 	txs := s.chainMgr.GetTxsByBlockHash(lastBlockHash)
+
+	if header == nil {
+		return nil
+	}
+
 	if header.Height == 0 {
 		return nil
 	}
 	// sync blockchain header
 	if err := s.syncBlockHeader(header, len(txs)); err != nil {
+		global.GVA_LOG.Warn(err.Error())
 		return err
 	}
 	// sync blockchain txs
-	if err := s.syncTxs(header, txs); err != nil {
-		return err
-	}
+	go s.syncTxs(header, txs)
+	// if err := go s.syncTxs(header, txs); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -225,19 +246,22 @@ func (s *syncService) syncBlockHeader(header *BlockHeader, txCount int) error {
 		Rewards:          rewards.String(),
 	}
 	if err := s.recordHandle.writeChainHeader(carrier); err != nil {
+		global.GVA_LOG.Warn(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
+func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) {
 
 	for _, tx := range txs {
 		receipts := s.chainMgr.GetReceiptByHash(tx.Hash)
+		if receipts == nil {
+			continue
+		}
 		gasuesd := decimal.NewFromInt(receipts.GasUsed)
 		gasPice := decimal.NewFromFloat(tx.GasPrice)
 		gasLimit := decimal.NewFromFloat(tx.GasLimit)
-		// global.GVA_LOG         .Warn(err.Error())
 		gasuesdFloat, ok := gasuesd.Float64()
 		if !ok {
 			global.GVA_LOG.Warn(fmt.Sprintf("txhash:%v blockhash:%v blockheight:%v", tx.Hash, header.Hash, header.Height))
@@ -256,45 +280,48 @@ func (s *syncService) syncTxs(header *BlockHeader, txs []*Transaction) error {
 			Data:        tx.Data,
 			Nonce:       tx.Nonce,
 			Value:       tx.Value.String(),
-			// Signature: "",
-			Hash:   tx.Hash,
-			Status: int(receipts.Status),
-			Type:   0,
+			Signature:   tx.Signature,
+			Hash:        tx.Hash,
+			Status:      int(receipts.Status),
+			Type:        0,
 		}
 		if carrier.TxTo == "" {
 			carrier.Type = 1
 		}
 		if err := s.syncAccouts(header, tx); err != nil {
-			return err
+			global.GVA_LOG.Warn(err.Error())
+			return
 		}
 		if err := s.recordHandle.writeTxs(carrier); err != nil {
-			return err
+			global.GVA_LOG.Warn(err.Error())
+			return
 		}
 	}
-	return nil
 }
 
 func (s *syncService) syncAccouts(header *BlockHeader, tx *Transaction) error {
-
-	if err := s.updateAccount(header, tx, tx.From); err != nil {
-		return err
-	}
-	if err := s.updateAccount(header, tx, tx.To); err != nil {
-		return err
+	addrs := []string{tx.From, tx.To}
+	for _, v := range addrs {
+		go s.updateAccount(header, tx, v)
 	}
 	return nil
 }
 
 func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr string) error {
 	var (
-		obj      *model.ChainAddress = nil
+		obj      *model.ChainAddress = new(model.ChainAddress)
 		objChain *AccountState       = new(AccountState)
+		carrier  *model.ChainAddress
 	)
 
 	obj = s.recordHandle.QueryAccount(addr)
 	objChain = s.chainMgr.GetAccountInfo(addr)
+	if obj == nil || objChain == nil {
+		global.GVA_LOG.Warn(fmt.Sprintf("GetAccountInfo:%v error:%v", addr, objChain))
+		return nil
+	}
 
-	carrier := new(model.ChainAddress)
+	carrier = new(model.ChainAddress)
 	if obj == nil {
 		carrier.Address = addr
 		carrier.Balance = objChain.Balance
@@ -316,26 +343,33 @@ func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr s
 		carrier.CreateFromBlockHash = header.Hash
 		carrier.CreateFromStateRoot = header.StateRoot
 		carrier.CreateFromTxHash = tx.Hash
-
-		return s.recordHandle.writeAccount(carrier)
-	} else {
-		carrier.Address = tx.From
-		carrier.Balance = objChain.Balance
-		carrier.Nonce = objChain.Nonce
-		carrier.Extra = objChain.Extra
-		carrier.Code = objChain.Code
-		carrier.StateRoot = objChain.StateRoot
-		carrier.FromStateRoot = header.StateRoot
-		carrier.FromBlockHeight = header.Height
-		carrier.FromBlockHash = header.Hash
-		carrier.TxCount = obj.TxCount + 1
-		if header.Height > obj.CreateFromBlockHeight {
-			carrier.CreateFromBlockHash = header.Hash
-			carrier.CreateFromBlockHeight = header.Height
-			carrier.CreateFromBlockHash = header.Hash
-			carrier.CreateFromStateRoot = header.StateRoot
-			carrier.CreateFromTxHash = tx.Hash
+		err := s.recordHandle.writeAccount(carrier)
+		if err != nil {
+			global.GVA_LOG.Warn(err.Error())
 		}
-		return s.recordHandle.updateAccount(carrier)
+		return err
 	}
+
+	carrier.Address = tx.From
+	carrier.Balance = objChain.Balance
+	carrier.Nonce = objChain.Nonce
+	carrier.Extra = objChain.Extra
+	carrier.Code = objChain.Code
+	carrier.StateRoot = objChain.StateRoot
+	carrier.FromStateRoot = header.StateRoot
+	carrier.FromBlockHeight = header.Height
+	carrier.FromBlockHash = header.Hash
+	carrier.TxCount = obj.TxCount + 1
+	if header.Height > obj.CreateFromBlockHeight {
+		carrier.CreateFromBlockHash = header.Hash
+		carrier.CreateFromBlockHeight = header.Height
+		carrier.CreateFromBlockHash = header.Hash
+		carrier.CreateFromStateRoot = header.StateRoot
+		carrier.CreateFromTxHash = tx.Hash
+	}
+	err := s.recordHandle.updateAccount(carrier)
+	if err != nil {
+		global.GVA_LOG.Warn(err.Error())
+	}
+	return err
 }
