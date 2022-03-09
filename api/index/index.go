@@ -188,24 +188,24 @@ func (i *IndexLinkApi) TxCountByDay(c *gin.Context) {
 	blocks := i.Handle.HandleBlockHeader.Query("timestamp > ?", beforeTime)
 
 	result = make([]*TxCountByDayResp, param)
-	for i := 1; i <= param; i++ {
-		nextTime := startTime - int64((oneday * i))
+	var baseNumber int = 0
+	for i := 0; i < param; i++ {
+		if i == 0 {
+			baseNumber = 0
+		} else {
+			baseNumber = oneday * i
+		}
+		nextTime := startTime - int64(baseNumber)
 		currentTime := nextTime + int64(oneday)
 		txCountDay := new(TxCountByDayResp)
 		txCountDay.Timestamp = int64(currentTime)
 		for _, v := range blocks {
-			if startTime == currentTime {
-				todayTime := today.Unix()
-				if (v.Timestamp < int64(todayTime)) && (v.Timestamp > int64(nextTime)) {
-					txCountDay.TxCount = txCountDay.TxCount + int64(v.TxCount)
-				}
-			} else {
-				if (v.Timestamp < int64(currentTime)) && (v.Timestamp > int64(nextTime)) {
-					txCountDay.TxCount = txCountDay.TxCount + int64(v.TxCount)
-				}
+
+			if (v.Timestamp < int64(currentTime)) && (v.Timestamp > int64(nextTime)) {
+				txCountDay.TxCount = txCountDay.TxCount + int64(v.TxCount)
 			}
 		}
-		result[i-1] = txCountDay
+		result[i] = txCountDay
 	}
 	common.SendResponse(c, http.StatusOK, nil, result)
 }
