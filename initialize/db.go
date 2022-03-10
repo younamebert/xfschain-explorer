@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 	"xfschainbrowser/common"
 	"xfschainbrowser/conf"
 	"xfschainbrowser/global"
@@ -27,6 +28,9 @@ func Gorm() *gorm.DB {
 		fmt.Printf("installMysql err:%v\n", err)
 		os.Exit(1)
 	}
+	db.DB().SetMaxIdleConns(50)
+	db.DB().SetMaxOpenConns(50)
+	db.DB().SetConnMaxLifetime(time.Minute)
 	// defer db.Close()
 	db.SingularTable(true)
 	return db

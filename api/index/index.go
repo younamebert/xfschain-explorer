@@ -198,7 +198,7 @@ func (i *IndexLinkApi) TxCountByDay(c *gin.Context) {
 		nextTime := startTime - int64(baseNumber)
 		currentTime := nextTime + int64(oneday)
 		txCountDay := new(TxCountByDayResp)
-		txCountDay.Timestamp = int64(currentTime)
+		txCountDay.Timestamp = int64(nextTime)
 		for _, v := range blocks {
 
 			if (v.Timestamp < int64(currentTime)) && (v.Timestamp > int64(nextTime)) {

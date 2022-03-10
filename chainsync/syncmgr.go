@@ -316,7 +316,7 @@ func (s *syncService) updateAccount(header *BlockHeader, tx *Transaction, addr s
 
 	obj = s.recordHandle.QueryAccount(addr)
 	objChain = s.chainMgr.GetAccountInfo(addr)
-	if obj == nil || objChain == nil {
+	if objChain == nil {
 		global.GVA_LOG.Warn(fmt.Sprintf("GetAccountInfo:%v error:%v", addr, objChain))
 		return nil
 	}
