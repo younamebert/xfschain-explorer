@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 	"xfschainbrowser/common"
@@ -168,10 +169,11 @@ func (i *IndexLinkApi) Search(c *gin.Context) {
 func (i *IndexLinkApi) TxCountByDay(c *gin.Context) {
 
 	var (
-		param      int
-		today      time.Time = time.Now()
-		oneday     int       = 86400
-		result     []*TxCountByDayResp
+		param  int
+		today  time.Time = time.Now()
+		oneday int       = 86400
+		// result     []*TxCountByDayResp
+		info       TxCountByDayResps
 		startTime  int64
 		beforeTime int64
 	)
@@ -187,25 +189,28 @@ func (i *IndexLinkApi) TxCountByDay(c *gin.Context) {
 
 	blocks := i.Handle.HandleBlockHeader.Query("timestamp > ?", beforeTime)
 
-	result = make([]*TxCountByDayResp, param)
-	var baseNumber int = 0
-	for i := 0; i < param; i++ {
-		if i == 0 {
-			baseNumber = 0
-		} else {
-			baseNumber = oneday * i
-		}
-		nextTime := startTime - int64(baseNumber)
+	result := make([]*TxCountByDayResp, param)
+	// var baseNumber int = 0
+	for i := 1; i <= param; i++ {
+		// if i == 0 {
+		// 	baseNumber = 0
+		// } else {
+		// 	baseNumber = oneday * i
+		// }
+		// nextTime := startTime - int64(baseNumber)
+		nextTime := startTime - int64(oneday*i)
 		currentTime := nextTime + int64(oneday)
 		txCountDay := new(TxCountByDayResp)
 		txCountDay.Timestamp = int64(nextTime)
 		for _, v := range blocks {
-
 			if (v.Timestamp < int64(currentTime)) && (v.Timestamp > int64(nextTime)) {
 				txCountDay.TxCount = txCountDay.TxCount + int64(v.TxCount)
 			}
 		}
-		result[i] = txCountDay
+		result[i-1] = txCountDay
+
 	}
+	info = result
+	sort.Sort(info)
 	common.SendResponse(c, http.StatusOK, nil, result)
 }

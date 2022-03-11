@@ -28,3 +28,9 @@ type SearchResp struct {
 	Type      int    `json:"type"`
 	PathValue string `json:"pathValue"`
 }
+
+type TxCountByDayResps []*TxCountByDayResp
+
+func (s TxCountByDayResps) Len() int           { return len(s) }
+func (s TxCountByDayResps) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s TxCountByDayResps) Less(i, j int) bool { return s[i].Timestamp < s[j].Timestamp }

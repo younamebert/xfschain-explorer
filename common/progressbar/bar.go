@@ -28,7 +28,7 @@ func (bar *Bar) NewOption(start, total int64) {
 }
 
 func (bar *Bar) getPercent() int64 {
-	return int64(float64(bar.cur) / float64(bar.total) * 100)
+	return int64(float32(bar.cur) / float32(bar.total) * 100)
 }
 
 func (bar *Bar) NewOptionWithGraph(start, total int64, graph string) {
@@ -47,8 +47,9 @@ func (bar *Bar) Play(cur, lastHeight, currentHeight int64) {
 		bar.rate += bar.graph
 	}
 	global.GVA_LOG.Info(fmt.Sprintf("sync mode:desc order synchronous progress: %3d%%  %8d/%d currentHeight=%v lastHeight=%v", bar.percent, bar.cur, bar.total, currentHeight, lastHeight))
-	// fmt.Printf("\r[%-50s]%3d%%  %8d/%d currentHeight=%v lastHeight=%v", bar.rate, bar.percent, bar.cur, bar.total, currentHeight, lastHeight)
-	// fmt.Sprintf("\r%3d%%  %8d/%d currentHeight=%v lastHeight=%v", bar.percent, bar.cur, bar.total, currentHeight, lastHeight)
+	// global.GVA_LOG.Info(fmt.Sprintf("\r[%-50s]%3d%%  %8d/%d currentHeight=%v lastHeight=%v sync mode:desc order synchronous", bar.rate, bar.percent, bar.cur, bar.total, currentHeight, lastHeight))
+
+	// fmt.Printf("\r%3d%%  %8d/%d currentHeight=%v lastHeight=%v sync mode:desc order synchronous", bar.percent, bar.cur, bar.total, currentHeight, lastHeight)
 	// fmt.Printf("lastHeight=%v currentHeight=%v")
 }
 
