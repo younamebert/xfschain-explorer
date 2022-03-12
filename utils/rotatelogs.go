@@ -1,8 +1,8 @@
 package utils
 
 import (
+	"mi/conf"
 	"os"
-	"xfschainbrowser/conf"
 
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap/zapcore"

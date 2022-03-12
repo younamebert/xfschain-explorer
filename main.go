@@ -1,9 +1,9 @@
 package main
 
 import (
-	"xfschainbrowser/core"
-	"xfschainbrowser/global"
-	"xfschainbrowser/initialize"
+	"mi/core"
+	"mi/global"
+	"mi/initialize"
 )
 
 func main() {

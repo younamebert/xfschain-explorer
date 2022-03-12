@@ -1,8 +1,8 @@
 package middleware
 
 import (
+	"mi/conf"
 	"net/http"
-	"xfschainbrowser/conf"
 
 	"github.com/gin-gonic/gin"
 )

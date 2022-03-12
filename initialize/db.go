@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"mi/common"
+	"mi/conf"
+	"mi/global"
 	"os"
 	"strings"
-	"xfschainbrowser/common"
-	"xfschainbrowser/conf"
-	"xfschainbrowser/global"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -16,17 +17,25 @@ import (
 
 //MysqlDb mysql结构体
 func Gorm() *gorm.DB {
-	db, err := gorm.Open("mysql", "root:1263701671@(127.0.0.1:3306)/xfschain?charset=utf8mb4&parseTime=True&loc=Local")
+	db, err := gorm.Open("mysql", "wl:123456@(120.26.217.42:3306)/wl?charset=utf8mb4&parseTime=True&loc=Local")
 	// db.SetLogger(true)
 	db.LogMode(false)
 	if err != nil {
 		fmt.Printf("gorm err:%v\n", err)
 		os.Exit(1)
 	}
-	if err := installMysql(db); err != nil {
-		fmt.Printf("installMysql err:%v\n", err)
-		os.Exit(1)
-	}
+
+	db.DB().SetMaxIdleConns(50)
+	db.DB().SetMaxOpenConns(50)
+	db.DB().SetConnMaxLifetime(time.Minute)
+	// if err := installMysql(db); err != nil {
+	// 	fmt.Printf("installMysql err:%v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// http://java.sun.com/xml/ns/javaee
+	// http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd
+	// http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd
 
 	// defer db.Close()
 	db.SingularTable(true)
