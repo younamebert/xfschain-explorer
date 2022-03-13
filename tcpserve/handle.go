@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"mi/events"
 	"mi/global"
@@ -21,6 +22,7 @@ type Handle struct {
 	model    *model.RecordHandle
 	iccid    string
 	tcpConn  net.Conn
+	outTime  *time.Timer
 	eventBus *events.EventBus
 }
 
@@ -28,6 +30,7 @@ func NewHandle() *Handle {
 	handle := &Handle{
 		model:    model.NewRecordHandle(),
 		eventBus: events.EventBusExample,
+		outTime:  time.NewTimer(30 * time.Minute), //30分钟
 	}
 	// 处理广播
 	go handle.MsgBroadcastLoop()
@@ -83,7 +86,9 @@ func (h *Handle) MsgBroadcastLoop() {
 					return
 				}
 			}
-			// fmt.Printf("current Iccid:%v\nreceived iccid:%v\n", h.iccid, event.Iccid)
+		case outime := <-h.outTime.C:
+			global.GVA_LOG.Error(fmt.Sprintf("timeout session iccid:%v time:%v", h.iccid, outime))
+			h.tcpConn.Close()
 		}
 	}
 }
@@ -128,11 +133,13 @@ func (h *Handle) chck(data []byte) ([]byte, error) {
 
 // arrary("nihao"=>["nihao":1])
 func (h *Handle) work(funccode byte, data []byte) ([]byte, error) {
-	// if h.iccid == "" {
-	// 	if funccode != common.Registers {
-	// 		return nil, errors.New("no iccid, please register first")
-	// 	}
-	// }
+	if h.iccid == "" {
+		if funccode != common.Registers {
+			return nil, errors.New("no iccid, please register first")
+		}
+	}
+	//reset out time
+	h.resetOutTime(funccode)
 	switch funccode {
 	case common.Registers:
 		return h.registers(data)
@@ -147,7 +154,6 @@ func (h *Handle) work(funccode byte, data []byte) ([]byte, error) {
 	case common.SwitchLamp:
 		return h.switchLamp(data)
 	}
-
 	return nil, nil
 }
 
@@ -166,9 +172,16 @@ func (h *Handle) registers(data []byte) ([]byte, error) {
 		fmt.Println(err)
 		return AddEquipmentRegistersErr, err
 	}
+	h.outTime = time.NewTimer(10 * time.Second)
 	h.iccid = iccid
 	// 写入数据库
 	return AddEquipmentRegisters, nil
+}
+
+func (h *Handle) resetOutTime(msgcode byte) {
+	if msgcode != common.Pant {
+		h.outTime.Reset(20 * time.Second)
+	}
 }
 
 func (h *Handle) pant(data []byte) ([]byte, error) {
