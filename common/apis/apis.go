@@ -1,18 +1,18 @@
 package apis
 
-import "xfschainbrowser/model"
+import "mi/model"
 
 type LinkApi struct {
-	HandleBlockHeader  *model.HandleChainBlockHeader
-	HandleBlockTxs     *model.HandleChainBlockTx
-	HandleChainAddress *model.HandleChainAddress
+	HandleMiEquipment *model.HandleMiEquipment
+	HandleMiWarehouse *model.HandleMiWarehouse
+	HandleMiOrder     *model.HandleMiOrder
 }
 
 func NewLinkApi() *LinkApi {
 	return &LinkApi{
-		HandleBlockHeader:  new(model.HandleChainBlockHeader),
-		HandleBlockTxs:     new(model.HandleChainBlockTx),
-		HandleChainAddress: new(model.HandleChainAddress),
+		HandleMiEquipment: new(model.HandleMiEquipment),
+		HandleMiWarehouse: new(model.HandleMiWarehouse),
+		HandleMiOrder:     new(model.HandleMiOrder),
 	}
 }
 

@@ -1,17 +1,12 @@
 package router
 
 import (
-	"xfschainbrowser/router/accounts"
-	"xfschainbrowser/router/blocks"
-	"xfschainbrowser/router/home"
-	"xfschainbrowser/router/transfer"
+	"mi/router/equipment"
 )
 
 type RouterGroup struct {
-	HomeRouter     home.HomeRouterGroup
-	BlocksRouter   blocks.BlocksRouterGroup
-	TxsRouter      transfer.TxsRouterGroup
-	AccountsRouter accounts.AccountsRouterGroup
+	//
+	EquipmentRouter equipment.EquipmentRouterGroup
 }
 
 var RouterGroupApp = new(RouterGroup)

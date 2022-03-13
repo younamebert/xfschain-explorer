@@ -1,6 +1,6 @@
 package api
 
-import "xfschainbrowser/model"
+import "mi/model"
 
 type StatusResp struct {
 	LatestHeight int64   `json:"latestHeight"`

@@ -2,8 +2,8 @@ package utils
 
 import (
 	"errors"
+	"mi/global"
 	"os"
-	"xfschainbrowser/global"
 
 	"go.uber.org/zap"
 )

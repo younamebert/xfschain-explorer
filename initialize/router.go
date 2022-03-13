@@ -1,9 +1,9 @@
 package initialize
 
 import (
-	"xfschainbrowser/global"
-	"xfschainbrowser/middleware"
-	"xfschainbrowser/router"
+	"mi/global"
+	"mi/middleware"
+	"mi/router"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,10 +20,8 @@ func Routers() *gin.Engine {
 	// 方便统一添加路由组前缀 多服务器上线使用
 
 	// 获取路由组实例
-	homeRouter := router.RouterGroupApp.HomeRouter
-	blockRouter := router.RouterGroupApp.BlocksRouter
-	txsRouter := router.RouterGroupApp.TxsRouter
-	accountRouter := router.RouterGroupApp.AccountsRouter
+
+	equipmentRouter := router.RouterGroupApp.EquipmentRouter
 
 	PublicGroup := Router.Group("")
 	{
@@ -32,10 +30,7 @@ func Routers() *gin.Engine {
 			c.JSON(200, "ok")
 		})
 	}
-	homeRouter.HomeRouters(PublicGroup)
-	blockRouter.BlocksRouters(PublicGroup)
-	txsRouter.TxsRouters(PublicGroup)
-	accountRouter.AccountsRouters(PublicGroup)
+	equipmentRouter.EquipmentRouters(PublicGroup)
 
 	// {
 	// 	IndexRouter.InitBaseRouter(PublicGroup) // 注册基础功能路由 不做鉴权

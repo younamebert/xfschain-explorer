@@ -1,23 +1,26 @@
 package core
 
 import (
+	"mi/conf"
+	"mi/global"
+	"mi/initialize"
 	"net/http"
 	"time"
-	"xfschainbrowser/conf"
-	"xfschainbrowser/global"
-	"xfschainbrowser/initialize"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 func RunServer() {
-	// gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 	Router := initialize.Routers()
 	// address := fmt.Sprintf(":%d", conf.Addr)
+
 	s := initServer(conf.Addr, Router)
-	time.Sleep(10 * time.Microsecond)
-	go chainSyncCore()
+	// time.Sleep(10 * time.Microsecond)
+	// go chainSyncCore()
+	go tcpServer()
+
 	global.GVA_LOG.Info("server run success on ", zap.String("address", conf.Addr))
 	global.GVA_LOG.Error(s.ListenAndServe().Error())
 }
