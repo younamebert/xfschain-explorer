@@ -2,6 +2,7 @@ package tcpserve
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"mi/global"
+	"mi/mi/events"
 	"mi/model"
 	"mi/tcpserve/common"
 	"mi/tools"
@@ -18,22 +20,34 @@ import (
 )
 
 type Handle struct {
-	model *model.RecordHandle
-	iccid string
+	model    *model.RecordHandle
+	iccid    string
+	tcpConn  net.Conn
+	outTime  *time.Timer
+	eventBus *events.EventBus
 }
 
 func NewHandle() *Handle {
-	return &Handle{
-		model: model.NewRecordHandle(),
+	handle := &Handle{
+		model:    model.NewRecordHandle(),
+		eventBus: events.EventBusExample,
+		outTime:  time.NewTimer(30 * time.Minute), //30分钟
 	}
+	// 处理广播
+	go handle.MsgBroadcastLoop()
+	return handle
 }
 
 // func (h *Handle)
 func (h *Handle) Process(conn net.Conn) error {
 
 	//打开注释的地方(devour)
-	defer conn.Close()
+	// defer conn.Close()
+	// go /
+	h.tcpConn = conn
+
 	for {
+		// h.MsgBroadcastLoop()
 		reader := bufio.NewReader(conn)
 		buf := make([]byte, 128)
 		n, err := reader.Read(buf) // 读取数据
@@ -57,6 +71,38 @@ func (h *Handle) Process(conn net.Conn) error {
 	return nil
 }
 
+func (h *Handle) resetOutTime(msgcode byte) {
+	if msgcode != common.Pant {
+		h.outTime.Reset(20 * time.Second)
+	}
+}
+
+func (h *Handle) MsgBroadcastLoop() {
+	newEventSub := h.eventBus.Subscript(events.SendNoticeEvent{})
+	defer newEventSub.Unsubscribe()
+	for {
+		// time.Sleep(time.Second * 1)
+		select {
+		case e := <-newEventSub.Chan():
+			event := e.(events.SendNoticeEvent)
+			if h.iccid == event.Iccid {
+				msg, err := h.chck(event.Data)
+				if err != nil {
+					h.tcpConn.Close()
+					return
+				}
+				if _, err := h.tcpConn.Write(msg); err != nil {
+					global.GVA_LOG.Warn(err.Error())
+					return
+				}
+			}
+		case outTime := <-h.outTime.C:
+			global.GVA_LOG.Error(fmt.Sprintf("Device timeout session iccid:%v outitme:%v", h.iccid, outTime.Unix()))
+			h.tcpConn.Close()
+		}
+	}
+}
+
 // func (h *Handle)
 func (h *Handle) chck(data []byte) ([]byte, error) {
 	//验证数据是否AA开头
@@ -66,15 +112,18 @@ func (h *Handle) chck(data []byte) ([]byte, error) {
 
 	//验证crc16
 	crc16 := common.CRC(data[:len(data)-2])
-	if crc16 != fmt.Sprintf("%X", data[len(data)-2:]) {
+	crc16msg := data[len(data)-2:]
+
+	if bytes.Compare(crc16, crc16msg) != int(0) {
 		return nil, errors.New("header crc error")
 	}
 
 	//验证数据长度
 	dataLen := data[2:3]
 	pending := data[3 : len(data)-2]
+
 	if int(dataLen[0]) != len(pending) {
-		return nil, errors.New("header crc error")
+		return nil, errors.New("header data len error")
 	}
 
 	// if int(data[2])
@@ -94,6 +143,13 @@ func (h *Handle) chck(data []byte) ([]byte, error) {
 
 // arrary("nihao"=>["nihao":1])
 func (h *Handle) work(funccode byte, data []byte) ([]byte, error) {
+	if h.iccid == "" {
+		if funccode != common.Registers {
+			return nil, errors.New("no iccid, please register first")
+		}
+	}
+
+	h.resetOutTime(funccode)
 	switch funccode {
 	case common.Registers:
 		return h.registers(data)
