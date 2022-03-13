@@ -2,30 +2,45 @@ package tcpserve
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 
+	"mi/events"
 	"mi/global"
 	"mi/model"
 	"mi/tcpserve/common"
 	"net"
+
+	"github.com/shopspring/decimal"
 )
 
 type Handle struct {
-	model *model.RecordHandle
-	iccid string
+	model    *model.RecordHandle
+	iccid    string
+	tcpConn  net.Conn
+	eventBus *events.EventBus
 }
 
 func NewHandle() *Handle {
-	return &Handle{
-		model: model.NewRecordHandle(),
+	handle := &Handle{
+		model:    model.NewRecordHandle(),
+		eventBus: events.EventBusExample,
 	}
+	// 处理广播
+	go handle.MsgBroadcastLoop()
+	return handle
 }
 
 // func (h *Handle)
 func (h *Handle) Process(conn net.Conn) error {
 	// defer conn.Close()
+	// go /
+	h.tcpConn = conn
 	for {
+		// h.MsgBroadcastLoop()
 		reader := bufio.NewReader(conn)
 		buf := make([]byte, 128)
 		n, err := reader.Read(buf) // 读取数据
@@ -49,6 +64,30 @@ func (h *Handle) Process(conn net.Conn) error {
 	return nil
 }
 
+func (h *Handle) MsgBroadcastLoop() {
+	newEventSub := h.eventBus.Subscript(events.SendNoticeEvent{})
+	defer newEventSub.Unsubscribe()
+	for {
+		// time.Sleep(time.Second * 1)
+		select {
+		case e := <-newEventSub.Chan():
+			event := e.(events.SendNoticeEvent)
+			if h.iccid == event.Iccid {
+				msg, err := h.chck(event.Data)
+				if err != nil {
+					h.tcpConn.Close()
+					return
+				}
+				if _, err := h.tcpConn.Write(msg); err != nil {
+					global.GVA_LOG.Warn(err.Error())
+					return
+				}
+			}
+			// fmt.Printf("current Iccid:%v\nreceived iccid:%v\n", h.iccid, event.Iccid)
+		}
+	}
+}
+
 // func (h *Handle)
 func (h *Handle) chck(data []byte) ([]byte, error) {
 	//验证数据是否AA开头
@@ -58,15 +97,18 @@ func (h *Handle) chck(data []byte) ([]byte, error) {
 
 	//验证crc16
 	crc16 := common.CRC(data[:len(data)-2])
-	if crc16 != fmt.Sprintf("%X", data[len(data)-2:]) {
+	crc16msg := data[len(data)-2:]
+
+	if bytes.Compare(crc16, crc16msg) != int(0) {
 		return nil, errors.New("header crc error")
 	}
 
 	//验证数据长度
 	dataLen := data[2:3]
 	pending := data[3 : len(data)-2]
+
 	if int(dataLen[0]) != len(pending) {
-		return nil, errors.New("header crc error")
+		return nil, errors.New("header data len error")
 	}
 
 	// if int(data[2])
@@ -86,6 +128,11 @@ func (h *Handle) chck(data []byte) ([]byte, error) {
 
 // arrary("nihao"=>["nihao":1])
 func (h *Handle) work(funccode byte, data []byte) ([]byte, error) {
+	// if h.iccid == "" {
+	// 	if funccode != common.Registers {
+	// 		return nil, errors.New("no iccid, please register first")
+	// 	}
+	// }
 	switch funccode {
 	case common.Registers:
 		return h.registers(data)
@@ -140,15 +187,33 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 
 func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 	// var (
-	// 	amounts decimal.Decimal
+	var amounts decimal.Decimal
 	// 	payType int
 	// 	payCode int
 	// )
 
-	// moneyUint64 := common.Hex2int(&[]byte{data[0], data[1]}) // 1045
-	// amounts = common.Uint64toDecimal(int64(moneyUint64), 100)
-	// // amounts.SetUint64(moneyUint4)
-	// // amounts.Quo(amounts, big.NewFloat(100)) // 10.45
+	moneyUint64 := common.Hex2int(&[]byte{data[0], data[1]}) // 1045
+	amounts = common.Uint64toDecimal(int64(moneyUint64), 100)
+	_ = amounts
+	encode := hex.EncodeToString(data)
+	// hex.E
+	// t := common.Hex2int(&data)
+	fmt.Println()
+	fmt.Println(encode)
+	i, _ := strconv.ParseInt(encode, 8, 0)
+	fmt.Println(i)
+	// n, _ := strconv.ParseUint(encode, 16, 32)
+	// fmt.Println(int(n))
+	// fmt.Printf("%v\n", t)
+
+	// n, _ := strconv.ParseUint(encode, 32, 16)
+	// fmt.Println(n)
+	// 04 1A 9D 91 8F 97 97 93 8D 91 9B 97 E5
+	// payCode := data[1:]
+	// str := hex.EncodeToString(payCode)
+	// fmt.Printf("str:%v\n", str)
+	// amounts.SetUint64(moneyUint4)
+	// amounts.Quo(amounts, big.NewFloat(100)) // 10.45
 
 	// switch len(data[1:]) {
 	// case 10:

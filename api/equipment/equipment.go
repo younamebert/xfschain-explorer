@@ -1,10 +1,10 @@
 package api
 
 import (
-	"fmt"
 	"mi/common"
 	"mi/common/apis"
 	"mi/conf"
+	"mi/events"
 	"net/http"
 	"strconv"
 
@@ -31,10 +31,7 @@ func (ac *EquipmentLinkApi) EquipmentList(c *gin.Context) {
 		pageSize = conf.PageSize
 	}
 	count := ac.Handle.HandleMiEquipment.Count(nil, nil)
-	fmt.Println(count)
-	fmt.Println(page, pageSize)
 	list := ac.Handle.HandleMiEquipment.Querys(nil, nil, page, pageSize)
-	fmt.Println(list)
 	if len(list) < 1 {
 		common.SendResponse(c, http.StatusOK, nil, nil)
 		return
@@ -48,6 +45,7 @@ func (ac *EquipmentLinkApi) EquipmentList(c *gin.Context) {
 	}
 	common.SendResponse(c, http.StatusOK, nil, result)
 }
+
 func (ac *EquipmentLinkApi) EquipmentSwitch(c *gin.Context) {
 	//   c.Qquer
 	// ac.Handle.HandleMiEquipment.Insert()
@@ -57,39 +55,48 @@ func (ac *EquipmentLinkApi) EquipmentSwitch(c *gin.Context) {
 func (ac *EquipmentLinkApi) SwitchAdvertising(c *gin.Context) {
 	//设备id
 	iccid := c.Query("iccid")
+	status, err := strconv.Atoi(c.Query("status"))
 
-	status := c.Query("status")
-
-	if iccid == "" || status == "" {
+	if iccid == "" || err != nil {
+		common.SendResponse(c, http.StatusBadRequest, common.NotParamErr, nil)
 		return
 	}
 
-	types, _ := strconv.Atoi(status)
-
-	err := ac.Handle.HandleMiEquipment.SetSwitchad(iccid, types)
-
-	if err != nil {
-
-		common.SendResponse(c, http.StatusOK, nil, "失败")
+	if (status != apis.OpenStatus) && (status != apis.CloseStatus) {
+		common.SendResponse(c, http.StatusBadRequest, common.NotParamErr, nil)
+		return
 	}
-	common.SendResponse(c, http.StatusOK, nil, "成功")
+
+	if err := ac.Handle.HandleMiEquipment.SetSwitchad(iccid, status); err != nil {
+		common.SendResponse(c, http.StatusBadRequest, err, nil)
+	}
+
+	common.SendResponse(c, http.StatusOK, nil, nil)
 }
 
 //关闭/打开灯带0关 1开
 func (ac *EquipmentLinkApi) SwitchLed(c *gin.Context) {
 	//iccid
 	iccid := c.Query("iccid")
+	status, err := strconv.Atoi(c.Query("status"))
 
-	status := c.Query("status")
-
-	types, _ := strconv.Atoi(status)
-
-	err := ac.Handle.HandleMiEquipment.SetSwitchadLed(iccid, types)
-
-	if err != nil {
-		common.SendResponse(c, http.StatusOK, nil, "失败")
+	if iccid == "" || err != nil {
+		common.SendResponse(c, http.StatusBadRequest, common.NotParamErr, nil)
+		return
 	}
-	common.SendResponse(c, http.StatusOK, nil, "成功")
+
+	if (status != apis.OpenStatus) && (status != apis.CloseStatus) {
+		common.SendResponse(c, http.StatusBadRequest, common.NotParamErr, nil)
+		return
+	}
+
+	if err := ac.Handle.HandleMiEquipment.SetSwitchadLed(iccid, status); err != nil {
+		common.SendResponse(c, http.StatusBadRequest, err, nil)
+	}
+
+	// push events sub	   //创建事件
+	ac.Handle.EventsBus.Publish(events.SendNoticeEvent{Iccid: iccid, Data: apis.SwitchIed(status)})
+	common.SendResponse(c, http.StatusOK, nil, nil)
 }
 
 //修改仓库价格

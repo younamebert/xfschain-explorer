@@ -1,4 +1,4 @@
-package global
+package events
 
 import (
 	"reflect"
@@ -16,6 +16,8 @@ type Subscription struct {
 	index int
 	c     chan interface{}
 }
+
+var EventBusExample *EventBus = NewEventBus()
 
 func (s *Subscription) Chan() chan interface{} {
 	return s.c
