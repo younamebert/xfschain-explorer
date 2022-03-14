@@ -1,6 +1,7 @@
 package connectpool
 
 import (
+	"mi/events"
 	"mi/tcpserve"
 	"net"
 )
@@ -27,6 +28,7 @@ func (t *Task) Execute() {
 type Pool struct {
 	EntryChannel chan *Task
 	JobsChannel  chan *Task
+	eventBus     *events.EventBus
 	work_num     int
 }
 
@@ -35,6 +37,7 @@ func NewPool(worker_max_num int) *Pool {
 		EntryChannel: make(chan *Task),
 		JobsChannel:  make(chan *Task),
 		work_num:     worker_max_num,
+		eventBus:     events.NewEventBus(),
 	}
 	return &t
 }

@@ -10,3 +10,8 @@ xfschain2022/03/08 - 13:07:32.156	[31merror[0m	/Users/huangdaxian/Desktop/mi/m
 xfschain2022/03/08 - 13:07:50.102	[31merror[0m	/Users/huangdaxian/Desktop/mi/mi/initialize/db.go:51	table exists in database
 xfschain2022/03/08 - 13:12:59.602	[31merror[0m	/Users/huangdaxian/Desktop/mi/mi/initialize/db.go:51	table exists in database
 xfschain2022/03/08 - 13:15:39.965	[31merror[0m	/Users/huangdaxian/Desktop/mi/mi/initialize/db.go:51	table exists in database
+xfschain2022/03/14 - 20:54:49.068	[31merror[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:100	Device timeout session iccid: outitme:1647262489
+xfschain2022/03/14 - 20:56:35.215	[31merror[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:100	Device timeout session iccid:898607B9102080239016 outitme:1647262595
+xfschain2022/03/14 - 21:03:49.972	[31merror[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:100	Device timeout session iccid: outitme:1647263029
+xfschain2022/03/14 - 21:06:22.380	[31merror[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:100	Device timeout session iccid:898607B9102080239016 outitme:1647263182
+xfschain2022/03/14 - 21:07:21.417	[31merror[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:100	Device timeout session iccid:898607B9102080239016 outitme:1647263241

@@ -31,3 +31,12 @@ xfschain2022/03/12 - 18:07:21.367	[33mwarn[0m	/Users/huangdaxian/Desktop/mi 2/
 xfschain2022/03/12 - 23:51:59.089	[33mwarn[0m	/Users/huangdaxian/Desktop/mi 2/mi/tcpserve/handle.go:41	EOF
 xfschain2022/03/13 - 09:40:36.420	[33mwarn[0m	/Users/huangdaxian/Desktop/mi 2/mi/tcpserve/handle.go:47	header data error
 xfschain2022/03/13 - 21:42:51.697	[33mwarn[0m	/Users/huangdaxian/Desktop/mi 2/mi/tcpserve/handle.go:47	Error 1062: Duplicate entry '898607B9102080239016' for key 'iccid'
+xfschain2022/03/14 - 20:54:30.062	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:61	Error 1062: Duplicate entry '898607B9102080239016' for key 'iccid'
+xfschain2022/03/14 - 20:56:35.217	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:59345: use of closed network connection
+xfschain2022/03/14 - 20:58:43.729	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:61	no iccid, please register first
+xfschain2022/03/14 - 21:00:50.986	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:61	header crc error
+xfschain2022/03/14 - 21:02:32.495	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:61	header crc error
+xfschain2022/03/14 - 21:03:18.033	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:61	header crc error
+xfschain2022/03/14 - 21:03:30.898	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:61	Error 1062: Duplicate entry '898607B9102080239016' for key 'iccid'
+xfschain2022/03/14 - 21:06:22.382	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:60056: use of closed network connection
+xfschain2022/03/14 - 21:07:21.419	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:60103: use of closed network connection

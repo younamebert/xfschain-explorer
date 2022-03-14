@@ -10,7 +10,7 @@ import (
 type EquipmentRouterGroup struct{}
 
 func (r *EquipmentRouterGroup) EquipmentRouters(Router *gin.RouterGroup) {
-	group := Router.Group("/equiment")
+	group := Router.Group("/equipment")
 
 	// resources := api.BlocksLinkApi{
 	// Handle: apis.NewLinkApi(),

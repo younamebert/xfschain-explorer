@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"mi/events"
 	"mi/global"
-	"mi/mi/events"
 	"mi/model"
 	"mi/tcpserve/common"
 	"mi/tools"
@@ -179,9 +179,15 @@ func (h *Handle) registers(data []byte) ([]byte, error) {
 	write := &model.MiEquipment{
 		Iccid: iccid,
 	}
-	if err := h.model.HandleMiEquipment.Insert(write); err != nil {
-		fmt.Println(err)
-		return AddEquipmentRegistersErr, err
+
+	//判断数据存不存在 不存在走这不
+	list := h.model.HandleMiEquipment.QueryOne("iccid =?", iccid)
+
+	if list.Iccid == "" {
+		if err := h.model.HandleMiEquipment.Insert(write); err != nil {
+			fmt.Println(err)
+			return AddEquipmentRegistersErr, err
+		}
 	}
 	h.iccid = iccid
 	// 写入数据库

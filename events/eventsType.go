@@ -1,4 +1,4 @@
-package global
+package events
 
 type SendNoticeEvent struct {
 	Iccid string

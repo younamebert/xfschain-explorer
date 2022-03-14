@@ -1,11 +1,15 @@
 package apis
 
-import "mi/model"
+import (
+	"mi/events"
+	"mi/model"
+)
 
 type LinkApi struct {
 	HandleMiEquipment *model.HandleMiEquipment
 	HandleMiWarehouse *model.HandleMiWarehouse
 	HandleMiOrder     *model.HandleMiOrder
+	EventsBus         *events.EventBus
 }
 
 func NewLinkApi() *LinkApi {
@@ -13,6 +17,7 @@ func NewLinkApi() *LinkApi {
 		HandleMiEquipment: new(model.HandleMiEquipment),
 		HandleMiWarehouse: new(model.HandleMiWarehouse),
 		HandleMiOrder:     new(model.HandleMiOrder),
+		EventsBus:         events.EventBusExample,
 	}
 }
 
