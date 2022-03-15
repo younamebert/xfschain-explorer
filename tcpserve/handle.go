@@ -73,7 +73,7 @@ func (h *Handle) Process(conn net.Conn) error {
 
 func (h *Handle) resetOutTime(msgcode byte) {
 	if msgcode != common.Pant {
-		h.outTime.Reset(20 * time.Second)
+		h.outTime.Reset(20 * time.Minute)
 	}
 }
 
@@ -181,7 +181,7 @@ func (h *Handle) registers(data []byte) ([]byte, error) {
 	}
 
 	//判断数据存不存在 不存在走这不
-	list := h.model.HandleMiEquipment.QueryOne("iccid =?", iccid)
+	list := h.model.HandleMiEquipment.Query("iccid =?", iccid)
 
 	if list.Iccid == "" {
 		if err := h.model.HandleMiEquipment.Insert(write); err != nil {
@@ -206,15 +206,11 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 	a := wareA
 	b := wareB
 
-	//查询数据库存不存在
-
-	EmptyA := h.model.HandleMiWarehouse.QueryOne("iccid =?", h.iccid, "status=?", 1)
-
-	//
 	//查询设备的a,b仓价格
-	list := h.model.HandleMiEquipment.QueryOne("iccid =?", h.iccid)
+	list := h.model.HandleMiEquipment.Query("iccid =?", h.iccid)
 
-	fmt.Println("数据:", list.AWarehousePrice)
+	//查询数据库存不存在
+	EmptyA := h.model.HandleMiWarehouse.Query("iccid =? and status=?", h.iccid, 1)
 	table1 := &model.MiWarehouse{
 		Iccid:          h.iccid,
 		WarehouseType:  a,
@@ -223,17 +219,14 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 	}
 	if EmptyA.Iccid == "" {
 		h.model.HandleMiWarehouse.Insert(table1)
-
 	} else {
 		//修改
-
 		EmptyA.WarehousePrice = list.AWarehousePrice
-		EmptyA.Status = b
+		EmptyA.WarehouseType = a
 		h.model.HandleMiWarehouse.SaveWare("iccid =?", h.iccid, "status=?", 1, EmptyA)
 	}
 
-	EmptyB := h.model.HandleMiWarehouse.QueryOne("iccid =?", h.iccid, "status=?", 2)
-
+	EmptyB := h.model.HandleMiWarehouse.Query("iccid =? and status=?", h.iccid, 2)
 	table2 := &model.MiWarehouse{
 		Iccid:          h.iccid,
 		WarehouseType:  b,
@@ -246,14 +239,14 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 		//修改
 
 		EmptyB.WarehousePrice = list.BWarehousePrice
-		EmptyB.Status = b
+		EmptyB.WarehouseType = b
 		h.model.HandleMiWarehouse.SaveWare("iccid =?", h.iccid, "status=?", 2, EmptyB)
 	}
 
 	mangeList := h.model.HandleWlMange.Query("iccid =?", h.iccid)
 
 	//a仓位预警
-	earlyA := h.model.HandleWlEarly.QueryOne("iccid =?", h.iccid, "warehouse=?", 1)
+	earlyA := h.model.HandleWlEarly.Query("iccid =?", h.iccid, "warehouse=?", 1)
 
 	if earlyA.Iccid == "" {
 
@@ -273,7 +266,7 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 	}
 
 	//b仓库预警
-	earlyB := h.model.HandleWlEarly.QueryOne("iccid =?", h.iccid, "warehouse=?", 2)
+	earlyB := h.model.HandleWlEarly.Query("iccid =?", h.iccid, "warehouse=?", 2)
 
 	if earlyB.Iccid == "" {
 

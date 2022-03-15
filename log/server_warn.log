@@ -42,3 +42,7 @@ xfschain2022/03/14 - 21:06:22.382	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tc
 xfschain2022/03/14 - 21:07:21.419	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:60103: use of closed network connection
 xfschain2022/03/15 - 19:57:54.071	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:52582: use of closed network connection
 xfschain2022/03/15 - 20:00:30.862	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:52799: use of closed network connection
+xfschain2022/03/15 - 20:14:31.814	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:54348: use of closed network connection
+xfschain2022/03/15 - 20:17:20.476	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:54915: use of closed network connection
+xfschain2022/03/15 - 20:29:01.589	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:61	header crc error
+xfschain2022/03/15 - 20:31:36.313	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:61	header crc error
