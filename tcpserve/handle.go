@@ -493,6 +493,11 @@ func (h *Handle) switchad(data []byte) ([]byte, error) {
 		switchadType = 0
 	}
 	fmt.Println(switchadType)
+
+	if err := h.model.HandleMiEquipment.SetSwitchad("iccid =?", switchadType); err != nil {
+		return SwitchAdvertisingError, nil
+	}
+
 	return SwitchAdvertisingSucc, nil
 }
 
@@ -504,6 +509,9 @@ func (h *Handle) switchLamp(data []byte) ([]byte, error) {
 	case byte(0xFF):
 		switchLampType = 0
 	}
-	fmt.Println(switchLampType)
+
+	if err := h.model.HandleMiEquipment.SetSwitchadLed("iccid =?", switchLampType); err != nil {
+		return SwitchBeltError, nil
+	}
 	return SwitchBeltSucc, nil
 }
