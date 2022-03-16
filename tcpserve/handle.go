@@ -103,6 +103,7 @@ func (h *Handle) MsgBroadcastLoop() {
 
 // func (h *Handle)
 func (h *Handle) chck(data []byte) ([]byte, error) {
+
 	//验证数据是否AA开头
 	if data[0] != common.Header {
 		return nil, errors.New("header data error")
@@ -306,15 +307,31 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 	moneyUint64 := common.Hex2int(&[]byte{data[0], data[1]}) // 1045
 	amounts = common.Uint64toDecimal(int64(moneyUint64), 100)
 
-	fmt.Println(payType, payCode)
+	_, _ = payType, payCode
 
 	cardNumber := h.model.HandleWlCardNumber.Query("number =?", "8939131")
 
 	//余额不足
 	money := decimal.NewFromFloat(cardNumber.Money).Round(2).BigFloat()
 
+	//余额不足
 	if money.Cmp(amounts.BigFloat()) < 0 {
 		return UploadOrderError, nil
+	}
+
+	switch len(data[1:]) {
+
+	//卡片支付
+	case common.Card:
+
+		break
+
+	//其它支付
+	case common.Other:
+
+		//微信支付
+
+		break
 	}
 
 	write := &model.MiOrder{
@@ -348,12 +365,13 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 		MangeId:  list.MangeId,
 	}
 
+	//余额足支付
 	if money.Cmp(amounts.BigFloat()) > 0 {
 		if err := h.model.HandleMiOrder.Insert(write); err != nil {
 			global.GVA_LOG.Warn(err.Error())
 
 			//返回错误码
-			return AddEquipmentRegistersErr, err
+			return UploadOrderSucc, err
 		}
 
 		//设备出售米纪录表
@@ -394,7 +412,6 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 
 		//设备出售米纪录表
 		h.model.HandleWlSale.Insert(saleWari)
-
 		moneyFloat, _ := money.Float64()
 		cardNumber.Money = moneyFloat
 		h.model.HandleWlCardNumber.Update("card_number_id=?", cardNumber.CardNumberId, cardNumber)
@@ -402,14 +419,7 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 		return UploadOrderSucc, nil
 	}
 
-	switch len(data[1:]) {
-	case 10:
-
-	case 18:
-
-	}
-
-	return AddEquipmentRegistersErr, nil
+	return UploadOrderSucc, nil
 }
 
 func (h *Handle) setPrice(data []byte) ([]byte, error) {
@@ -479,35 +489,78 @@ func (h *Handle) switchad(data []byte) ([]byte, error) {
 	var switchadType int = 0
 	switch data[0] {
 	case byte(0x00):
-		switchadType = 1
-	case byte(0xFF):
 		switchadType = 0
+	case byte(0xFF):
+		switchadType = 1
 	}
 
 	if err := h.model.HandleMiEquipment.SetSwitchad("iccid =?", switchadType); err != nil {
+		return nil, nil
+	}
+
+	if switchadType == 0 {
 		return SwitchAdvertisingError, nil
 	}
 
-	return SwitchAdvertisingSucc, nil
+	if switchadType == 1 {
+		return SwitchAdvertisingSucc, nil
+	}
+
+	return nil, nil
 }
 
 func (h *Handle) switchLamp(data []byte) ([]byte, error) {
 	var switchLampType int = 0
 	switch data[0] {
 	case byte(0x00):
-		switchLampType = 1
-	case byte(0xFF):
 		switchLampType = 0
+	case byte(0xFF):
+		switchLampType = 1
 	}
 
 	if err := h.model.HandleMiEquipment.SetSwitchadLed("iccid =?", switchLampType); err != nil {
+		return nil, nil
+	}
+
+	if switchLampType == 0 {
 		return SwitchBeltError, nil
 	}
-	return SwitchBeltSucc, nil
+
+	if switchLampType == 1 {
+		return SwitchBeltSucc, nil
+	}
+
+	return nil, nil
+
 }
 
+// []byte{0xAA, 0xF6, 0x03, 0x49, 0x51, 0x55, 0x02, 0x92}
+// []byte{0xAA, 0xF6, 0x03, 0x49, 0x50, 0x51, 0x02, 0x94}
 //开关机
 func (h *Handle) switchs(data []byte) ([]byte, error) {
-	fmt.Println(1123131)
+
+	var switchss int = 0
+
+	switch data[1] {
+	case byte(0x51):
+		switchss = 1
+	case byte(0x50):
+		switchss = 0
+	}
+
+	fmt.Println("结果:", switchss)
+
+	if err := h.model.HandleMiEquipment.SetSwitc("iccid =?", switchss); err != nil {
+		return nil, nil
+	}
+
+	if switchss == 0 {
+		h.tcpConn.Close()
+		return SwitchCloseError, nil
+	}
+
+	if switchss == 1 {
+		return SwitchOpenSucc, nil
+	}
 	return nil, nil
 }

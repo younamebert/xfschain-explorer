@@ -43,3 +43,14 @@ xfschain2022/03/14 - 21:07:21.419	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tc
 xfschain2022/03/15 - 19:57:54.071	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:52582: use of closed network connection
 xfschain2022/03/15 - 20:00:30.862	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:52799: use of closed network connection
 xfschain2022/03/16 - 16:37:43.655	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:56591: use of closed network connection
+xfschain2022/03/16 - 16:45:27.318	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:57445: use of closed network connection
+xfschain2022/03/16 - 16:47:35.225	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:57757: use of closed network connection
+xfschain2022/03/16 - 16:48:07.936	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:57809: use of closed network connection
+xfschain2022/03/16 - 16:49:32.213	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:58051: use of closed network connection
+xfschain2022/03/16 - 17:24:56.898	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:63592: use of closed network connection
+xfschain2022/03/16 - 17:24:56.898	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:93	write tcp 127.0.0.1:7898->127.0.0.1:63592: use of closed network connection
+xfschain2022/03/16 - 17:25:47.674	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:63743: use of closed network connection
+xfschain2022/03/16 - 17:25:47.674	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:93	write tcp 127.0.0.1:7898->127.0.0.1:63743: use of closed network connection
+xfschain2022/03/16 - 17:26:28.738	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:63860: use of closed network connection
+xfschain2022/03/16 - 17:26:28.738	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:93	write tcp 127.0.0.1:7898->127.0.0.1:63860: use of closed network connection
+xfschain2022/03/16 - 17:27:01.946	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:55	read tcp 127.0.0.1:7898->127.0.0.1:63922: use of closed network connection
