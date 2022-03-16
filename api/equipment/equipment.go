@@ -71,6 +71,9 @@ func (ac *EquipmentLinkApi) SwitchAdvertising(c *gin.Context) {
 		common.SendResponse(c, http.StatusBadRequest, err, nil)
 	}
 
+	// push events sub	   //创建事件
+	ac.Handle.EventsBus.Publish(events.SendNoticeEvent{Iccid: iccid, Data: apis.Screen(status)})
+
 	common.SendResponse(c, http.StatusOK, nil, nil)
 }
 
@@ -97,4 +100,27 @@ func (ac *EquipmentLinkApi) SwitchLed(c *gin.Context) {
 	// push events sub	   //创建事件
 	ac.Handle.EventsBus.Publish(events.SendNoticeEvent{Iccid: iccid, Data: apis.SwitchIed(status)})
 	common.SendResponse(c, http.StatusOK, nil, nil)
+}
+
+type Data struct {
+	Iccid  string  `json:"iccid"`
+	APrice float64 `json:"a_price"`
+	BPrice float64 `json:"b_price"`
+}
+
+//修改单价
+func (ac *EquipmentLinkApi) UpdatePrice(c *gin.Context) {
+	json := Data{}
+
+	c.Bind(&json)
+
+	//修改数据库a仓 b仓
+	ac.Handle.HandleMiEquipment.Update(json.Iccid, "a_warehouse_price", json.APrice)
+
+	ac.Handle.HandleMiEquipment.Update(json.Iccid, "b_warehouse_price", json.BPrice)
+
+	apis.UpdatePrice(json.Iccid, json.APrice, json.BPrice)
+
+	common.SendResponse(c, http.StatusOK, nil, json)
+
 }

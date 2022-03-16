@@ -7,6 +7,15 @@ var (
 	switchIedClose = []byte{0xAA, 0xF5, 0x01, 0x00, 0x01, 0xA0}
 )
 
+// 服务端发送：
+// 打开广告屏：AA F4 01 FF 02 9E
+// 关闭广告屏：AA F4 01 00 01 9F
+
+var (
+	screenOpen  = []byte{0xAA, 0xF4, 0x01, 0xFF, 0x02, 0x9E}
+	screenClose = []byte{0xAA, 0xF4, 0x01, 0x00, 0x01, 0x9F}
+)
+
 const (
 	CloseStatus int = 0
 	OpenStatus  int = 1
@@ -17,5 +26,13 @@ func SwitchIed(status int) []byte {
 		return switchIedOpen
 	} else {
 		return switchIedClose
+	}
+}
+
+func Screen(status int) []byte {
+	if status == 1 {
+		return screenOpen
+	} else {
+		return screenClose
 	}
 }

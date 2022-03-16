@@ -29,6 +29,8 @@ func (r *EquipmentRouterGroup) EquipmentRouters(Router *gin.RouterGroup) {
 
 	group.GET("/switchLed", resources.SwitchLed)
 
+	group.POST("/updatePrice", resources.UpdatePrice)
+
 	// group.GET("/getaccounts", resources.GetAccounts)
 	// group.GET("/detailed", resources.Detailed)
 	// group.GET("/detailedtxs", resources.DetailedTxs)

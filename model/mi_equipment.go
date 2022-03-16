@@ -56,7 +56,7 @@ func (h *HandleMiEquipment) Querys(query, args interface{}, page, pageSize int) 
 }
 
 //查询单条
-func (h *HandleMiEquipment) QueryOne(query, args interface{}) *MiEquipment {
+func (h *HandleMiEquipment) Query(query, args interface{}) *MiEquipment {
 	db := global.GVA_DB.Table("mi_equipment")
 
 	miEquipment := new(MiEquipment)
@@ -81,6 +81,16 @@ func (h *HandleMiEquipment) SetSwitchadLed(iccid string, i int) error {
 	db := global.GVA_DB.Table("mi_equipment")
 
 	err := db.Where("iccid = ?", iccid).Update("switch_lamp", i).Error
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (h *HandleMiEquipment) Update(iccid string, args string, money float64) error {
+	db := global.GVA_DB.Table("mi_equipment")
+
+	err := db.Where("iccid = ?", iccid).Update(args, money).Error
 	if err != nil {
 		return err
 	}

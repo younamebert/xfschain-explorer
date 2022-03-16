@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"mi/global"
 	"time"
 )
@@ -41,10 +40,10 @@ func (h *HandleMiWarehouse) Update(mie *MiWarehouse) error {
 	return nil
 }
 
-func (h *HandleMiWarehouse) Query(query, args interface{}) []*MiWarehouse {
+func (h *HandleMiWarehouse) Query(query, args, args2 interface{}) *MiWarehouse {
 	db := global.GVA_DB.Table("mi_warehouse")
-	miWarehouses := make([]*MiWarehouse, 0)
-	if err := db.Where(query, args).Find(&miWarehouses).Error; err != nil {
+	miWarehouses := new(MiWarehouse)
+	if err := db.Where(query, args, args2).Find(&miWarehouses).Error; err != nil {
 		return miWarehouses
 	}
 	return miWarehouses
@@ -64,21 +63,9 @@ func (h *HandleMiWarehouse) Querys(query, args interface{}, page, pageSize int) 
 	return miWarehouses
 }
 
-//单条数据查询
-func (h *HandleMiWarehouse) QueryOne(query, args, querys, args2 interface{}) *MiWarehouse {
-	db := global.GVA_DB.Table("mi_warehouse")
-
-	miWarehouse := new(MiWarehouse)
-
-	if err := db.Where(query, args).Where(querys, args2).Find(&miWarehouse); err != nil {
-		return miWarehouse
-	}
-	return nil
-}
-
 func (h *HandleMiWarehouse) SaveWare(query, args, querys, args2 interface{}, mie *MiWarehouse) error {
 
-	fmt.Println(mie)
+	// fmt.Println(mie)
 	db := global.GVA_DB.Table("mi_warehouse")
 	mie.UpdateTime = time.Now()
 	if err := db.Where(query, args).Where(querys, args2).Update(&mie).Error; err != nil {

@@ -73,7 +73,7 @@ func (h *Handle) Process(conn net.Conn) error {
 
 func (h *Handle) resetOutTime(msgcode byte) {
 	if msgcode != common.Pant {
-		h.outTime.Reset(20 * time.Second)
+		h.outTime.Reset(20 * time.Minute)
 	}
 }
 
@@ -181,7 +181,7 @@ func (h *Handle) registers(data []byte) ([]byte, error) {
 	}
 
 	//判断数据存不存在 不存在走这不
-	list := h.model.HandleMiEquipment.QueryOne("iccid =?", iccid)
+	list := h.model.HandleMiEquipment.Query("iccid =?", iccid)
 
 	if list.Iccid == "" {
 		if err := h.model.HandleMiEquipment.Insert(write); err != nil {
@@ -208,13 +208,12 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 
 	//查询数据库存不存在
 
-	EmptyA := h.model.HandleMiWarehouse.QueryOne("iccid =?", h.iccid, "status=?", 1)
+	EmptyA := h.model.HandleMiWarehouse.Query("iccid =? and status=?", h.iccid, 1)
 
 	//
 	//查询设备的a,b仓价格
-	list := h.model.HandleMiEquipment.QueryOne("iccid =?", h.iccid)
+	list := h.model.HandleMiEquipment.Query("iccid =?", h.iccid)
 
-	fmt.Println("数据:", list.AWarehousePrice)
 	table1 := &model.MiWarehouse{
 		Iccid:          h.iccid,
 		WarehouseType:  a,
@@ -228,11 +227,11 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 		//修改
 
 		EmptyA.WarehousePrice = list.AWarehousePrice
-		EmptyA.Status = b
+		EmptyA.WarehouseType = a
 		h.model.HandleMiWarehouse.SaveWare("iccid =?", h.iccid, "status=?", 1, EmptyA)
 	}
 
-	EmptyB := h.model.HandleMiWarehouse.QueryOne("iccid =?", h.iccid, "status=?", 2)
+	EmptyB := h.model.HandleMiWarehouse.Query("iccid =? and status=?", h.iccid, 2)
 
 	table2 := &model.MiWarehouse{
 		Iccid:          h.iccid,
@@ -246,7 +245,7 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 		//修改
 
 		EmptyB.WarehousePrice = list.BWarehousePrice
-		EmptyB.Status = b
+		EmptyB.WarehouseType = b
 		h.model.HandleMiWarehouse.SaveWare("iccid =?", h.iccid, "status=?", 2, EmptyB)
 	}
 
@@ -307,7 +306,7 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 	moneyUint64 := common.Hex2int(&[]byte{data[0], data[1]}) // 1045
 	amounts = common.Uint64toDecimal(int64(moneyUint64), 100)
 
-	fmt.Println(amounts, payType, payCode)
+	fmt.Println(payType, payCode)
 
 	cardNumber := h.model.HandleWlCardNumber.Query("number =?", "8939131")
 
@@ -492,7 +491,6 @@ func (h *Handle) switchad(data []byte) ([]byte, error) {
 	case byte(0xFF):
 		switchadType = 0
 	}
-	fmt.Println(switchadType)
 
 	if err := h.model.HandleMiEquipment.SetSwitchad("iccid =?", switchadType); err != nil {
 		return SwitchAdvertisingError, nil
