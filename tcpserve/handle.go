@@ -210,8 +210,6 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 	//查询数据库存不存在
 
 	EmptyA := h.model.HandleMiWarehouse.Query("iccid =? and status=?", h.iccid, 1)
-
-	//
 	//查询设备的a,b仓价格
 	list := h.model.HandleMiEquipment.Query("iccid =?", h.iccid)
 
@@ -233,7 +231,6 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 	}
 
 	EmptyB := h.model.HandleMiWarehouse.Query("iccid =? and status=?", h.iccid, 2)
-
 	table2 := &model.MiWarehouse{
 		Iccid:          h.iccid,
 		WarehouseType:  b,
