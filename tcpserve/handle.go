@@ -323,7 +323,7 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 
 	//卡片支付
 	case common.Card:
-
+		fmt.Println(11313)
 		break
 
 	//其它支付
