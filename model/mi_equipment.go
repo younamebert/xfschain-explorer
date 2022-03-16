@@ -96,3 +96,13 @@ func (h *HandleMiEquipment) Update(iccid string, args string, money float64) err
 	}
 	return err
 }
+
+func (h *HandleMiEquipment) SwitchMachine(iccid string, i int) error {
+	db := global.GVA_DB.Table("mi_equipment")
+
+	err := db.Where("iccid = ?", iccid).Update("status", i).Error
+	if err != nil {
+		return err
+	}
+	return err
+}

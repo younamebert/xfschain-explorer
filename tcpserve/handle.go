@@ -65,8 +65,6 @@ func (h *Handle) Process(conn net.Conn) error {
 			global.GVA_LOG.Warn(err.Error())
 			return fmt.Errorf("write client msg, err: %v", err)
 		}
-		// fmt.Printf("%x", result)
-		// fmt.Println(23456)
 	}
 	return nil
 }
@@ -163,6 +161,8 @@ func (h *Handle) work(funccode byte, data []byte) ([]byte, error) {
 		return h.switchad(data)
 	case common.SwitchLamp:
 		return h.switchLamp(data)
+	case common.Switchs:
+		return h.switchs(data)
 	}
 
 	return nil, nil
@@ -394,9 +394,6 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 
 		//设备出售米纪录表
 		h.model.HandleWlSale.Insert(saleWari)
-		//扣余额
-		// money.Sub(money, amounts.BigFloat())
-		// h.model.HandleWlCardNumber.Update("number =?", "8939131", "money", moneys)
 
 		moneyFloat, _ := money.Float64()
 		cardNumber.Money = moneyFloat
@@ -405,17 +402,12 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 		return UploadOrderSucc, nil
 	}
 
-	// switch len(data[1:]) {
-	// case 10:
+	switch len(data[1:]) {
+	case 10:
 
-	// 	// if err := h.model.HandleMiOrder.Insert(write); err != nil {
-	// 	// 	//返回错误码
-	// 	// 	fmt.Println("错误:", err)
-	// 	// 	return AddEquipmentRegistersErr, err
-	// 	// }
-	// case 18:
+	case 18:
 
-	// }
+	}
 
 	return AddEquipmentRegistersErr, nil
 }
@@ -512,4 +504,10 @@ func (h *Handle) switchLamp(data []byte) ([]byte, error) {
 		return SwitchBeltError, nil
 	}
 	return SwitchBeltSucc, nil
+}
+
+//开关机
+func (h *Handle) switchs(data []byte) ([]byte, error) {
+	fmt.Println(1123131)
+	return nil, nil
 }

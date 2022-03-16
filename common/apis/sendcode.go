@@ -16,6 +16,16 @@ var (
 	screenClose = []byte{0xAA, 0xF4, 0x01, 0x00, 0x01, 0x9F}
 )
 
+//开
+// aaf6034951550299
+
+//关
+//aaf6034950510294
+var (
+	SwitchOpen  = []byte{0xAA, 0xF6, 0x03, 0x49, 0x51, 0x55, 0x02, 0x99}
+	SwitchClose = []byte{0xAA, 0xF6, 0x03, 0x49, 0x50, 0x51, 0x02, 0x94}
+)
+
 const (
 	CloseStatus int = 0
 	OpenStatus  int = 1
@@ -34,5 +44,14 @@ func Screen(status int) []byte {
 		return screenOpen
 	} else {
 		return screenClose
+	}
+}
+
+//开关机
+func SwitchMac(status int) []byte {
+	if status == 1 {
+		return SwitchOpen
+	} else {
+		return SwitchClose
 	}
 }

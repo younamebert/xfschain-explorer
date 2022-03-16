@@ -124,3 +124,28 @@ func (ac *EquipmentLinkApi) UpdatePrice(c *gin.Context) {
 	common.SendResponse(c, http.StatusOK, nil, json)
 
 }
+
+//开关机
+func (ac *EquipmentLinkApi) SwitchMachine(c *gin.Context) {
+	iccid := c.Query("iccid")
+	status, err := strconv.Atoi(c.Query("status"))
+
+	if iccid == "" || err != nil {
+		common.SendResponse(c, http.StatusBadRequest, common.NotParamErr, nil)
+		return
+	}
+
+	if (status != apis.OpenStatus) && (status != apis.CloseStatus) {
+		common.SendResponse(c, http.StatusBadRequest, common.NotParamErr, nil)
+		return
+	}
+
+	if err := ac.Handle.HandleMiEquipment.SwitchMachine(iccid, status); err != nil {
+		common.SendResponse(c, http.StatusBadRequest, err, nil)
+	}
+
+	// push events sub	   //创建事件
+	ac.Handle.EventsBus.Publish(events.SendNoticeEvent{Iccid: iccid, Data: apis.SwitchMac(status)})
+
+	common.SendResponse(c, http.StatusOK, nil, nil)
+}

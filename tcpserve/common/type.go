@@ -9,6 +9,7 @@ const (
 	SetPrice    = byte(0xf3)
 	Switchad    = byte(0xf4)
 	SwitchLamp  = byte(0xf5)
+	Switchs     = byte(0xf6)
 )
 
 // 仓库枚举
