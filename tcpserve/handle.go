@@ -429,6 +429,8 @@ func (h *Handle) setPrice(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println(bs)
 	return bs, nil
 }
 
