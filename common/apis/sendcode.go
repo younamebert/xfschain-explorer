@@ -1,5 +1,12 @@
 package apis
 
+import (
+	"fmt"
+	"mi/common/crc16"
+
+	"github.com/shopspring/decimal"
+)
+
 //SwitchIedOpen-打开灯带：AA F5 01 FF 02 9F
 //SwitchIedClose-关闭灯带：AA F5 01 00 01 A0
 var (
@@ -54,4 +61,18 @@ func SwitchMac(status int) []byte {
 	} else {
 		return SwitchClose
 	}
+}
+
+func SetPriceCode(data string) string {
+	code := "AAF304"
+	// codelen := strconv.FormatInt(int64(len(data)), 16)
+	code = code + data
+
+	code = code + crc16.CRCS([]byte(code))
+	return code
+}
+
+func SetPrice2byte(price decimal.Decimal) string {
+	amount := price.Mul(decimal.NewFromFloat(100))
+	return fmt.Sprintf("%04X", amount.BigInt().Int64())
 }

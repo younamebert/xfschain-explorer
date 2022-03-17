@@ -13,6 +13,7 @@ const (
 
 var (
 	NotDataErr  = errors.New("nonexistent data")
+	NotIccidErr = errors.New("iccid is required")
 	NotParamErr = errors.New("parameter cannot be empty")
 )
 

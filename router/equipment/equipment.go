@@ -29,7 +29,7 @@ func (r *EquipmentRouterGroup) EquipmentRouters(Router *gin.RouterGroup) {
 
 	group.GET("/switchLed", resources.SwitchLed)
 
-	group.POST("/updatePrice", resources.UpdatePrice)
+	group.POST("/setprice", resources.UpdatePrice)
 
 	group.GET("/switchMachine", resources.SwitchMachine)
 

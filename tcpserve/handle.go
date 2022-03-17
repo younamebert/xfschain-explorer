@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"mi/common/crc16"
 	"mi/events"
 	"mi/global"
 	"mi/model"
@@ -109,13 +110,20 @@ func (h *Handle) chck(data []byte) ([]byte, error) {
 		return nil, errors.New("header data error")
 	}
 
+	fmt.Println("crc校验:", data)
+
 	//验证crc16
-	crc16 := common.CRC(data[:len(data)-2])
+	crc16 := crc16.CRC(data[:len(data)-2])
 	crc16msg := data[len(data)-2:]
+	//bert end
+
+	fmt.Println("检验:", crc16)
 
 	if bytes.Compare(crc16, crc16msg) != int(0) {
 		return nil, errors.New("header crc error")
 	}
+
+	// AA F3 04 01 60 01 60 02ED
 
 	//验证数据长度
 	dataLen := data[2:3]
@@ -132,12 +140,6 @@ func (h *Handle) chck(data []byte) ([]byte, error) {
 		return nil, err
 	}
 	return result, nil
-
-	// if _, err := h.Conn.Write(result); err != nil {
-	// 	global.GVA_LOG.Warn(fmt.Sprintf("iccid:%v session reply error:%v", h.Iccid, err))
-	// 	h.Conn.Close()
-	// 	return
-	// }
 }
 
 // arrary("nihao"=>["nihao":1])
@@ -420,6 +422,9 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 }
 
 func (h *Handle) setPrice(data []byte) ([]byte, error) {
+
+	fmt.Println(3131)
+
 	// var (
 	// 	wareAPrice decimal.Decimal
 	// 	wareBPrice decimal.Decimal

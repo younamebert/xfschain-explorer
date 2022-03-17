@@ -1,6 +1,10 @@
 package api
 
 import (
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"mi/common"
 	"mi/common/apis"
 	"mi/conf"
@@ -9,6 +13,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 )
 
 type EquipmentLinkApi struct {
@@ -108,20 +113,81 @@ type Data struct {
 	BPrice float64 `json:"b_price"`
 }
 
-//修改单价
+//修改仓库价格
+//handle 接收到修改单价命令的话，重新查询单价
 func (ac *EquipmentLinkApi) UpdatePrice(c *gin.Context) {
-	json := Data{}
+	//截取参数
+	body, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		common.SendResponse(c, http.StatusBadRequest, err, nil)
+		return
+	}
+	//取
+	parameter := new(SetPriceArgs)
+	if err := json.Unmarshal(body, &parameter); err != nil {
+		common.SendResponse(c, http.StatusBadRequest, err, nil)
+		return
+	}
+	if parameter.Iccid == "" {
+		common.SendResponse(c, http.StatusBadRequest, common.NotIccidErr, nil)
+		return
+	}
 
-	c.Bind(&json)
+	// code
+	priceCode := make([]decimal.Decimal, 2)
 
-	//修改数据库a仓 b仓
-	ac.Handle.HandleMiEquipment.Update(json.Iccid, "a_warehouse_price", json.APrice)
+	//iccid的所有长裤
+	euqicondition := make(map[string]interface{}, 0)
+	euqicondition["iccid"] = parameter.Iccid
+	euqicondition["status"] = 1
+	euqiA := ac.Handle.HandleMiWarehouse.BeartQuery(euqicondition)
+	priceCode[0] = decimal.NewFromFloat(euqiA.WarehousePrice)
+	if parameter.APrice != "" {
+		APrice, err := decimal.NewFromString(parameter.APrice)
+		if err != nil {
+			common.SendResponse(c, http.StatusBadRequest, err, nil)
+			return
+		}
+		price, ok := APrice.Round(2).Float64()
+		if !ok {
+			euqiA.WarehousePrice = price
+			if err := ac.Handle.HandleMiWarehouse.Update(euqicondition, euqiA); err != nil {
+				common.SendResponse(c, http.StatusBadRequest, err, nil)
+				return
+			}
+		}
+	}
+	euqiB := ac.Handle.HandleMiWarehouse.BeartQuery(euqicondition)
+	priceCode[1] = decimal.NewFromFloat(euqiB.WarehousePrice)
+	if parameter.BPrice != "" {
+		BPrice, err := decimal.NewFromString(parameter.BPrice)
+		if err != nil {
+			common.SendResponse(c, http.StatusBadRequest, err, nil)
+			return
+		}
+		price, ok := BPrice.Round(2).Float64()
+		if !ok {
+			euqiB.WarehousePrice = price
+			if err := ac.Handle.HandleMiWarehouse.Update(euqicondition, euqiB); err != nil {
+				common.SendResponse(c, http.StatusBadRequest, err, nil)
+				return
+			}
+		}
+	}
 
-	ac.Handle.HandleMiEquipment.Update(json.Iccid, "b_warehouse_price", json.BPrice)
+	// 拼凑code)
+	aCode := apis.SetPrice2byte(priceCode[0])
+	bCode := apis.SetPrice2byte(priceCode[1])
 
-	apis.UpdatePrice(json.Iccid, json.APrice, json.BPrice)
+	t := apis.SetPriceCode(aCode + bCode)
 
-	common.SendResponse(c, http.StatusOK, nil, json)
+	fmt.Println("数据:", t)
+
+	_ = t
+
+	b, _ := hex.DecodeString(t)
+
+	ac.Handle.EventsBus.Publish(events.SendNoticeEvent{Iccid: parameter.Iccid, Data: b})
 
 }
 
