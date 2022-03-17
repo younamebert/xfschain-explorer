@@ -29,7 +29,7 @@ func (h *HandleWlEarly) Insert(mie *WlEarly) error {
 }
 
 //单条数据查询
-func (h *HandleWlEarly) QueryOne(query, args, querys, args2 interface{}) *WlEarly {
+func (h *HandleWlEarly) Query(query, args, querys, args2 interface{}) *WlEarly {
 	db := global.GVA_DB.Table("wl_early")
 
 	wlEarly := new(WlEarly)
