@@ -3,12 +3,14 @@ package tcpserve
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
 
+	"mi/common/apis"
 	"mi/common/crc16"
 	"mi/events"
 	"mi/global"
@@ -41,10 +43,8 @@ func NewHandle() *Handle {
 
 // func (h *Handle)
 func (h *Handle) Process(conn net.Conn) error {
-
 	//打开注释的地方(devour)
 	// defer conn.Close()
-	// go /
 	h.tcpConn = conn
 
 	for {
@@ -110,20 +110,14 @@ func (h *Handle) chck(data []byte) ([]byte, error) {
 		return nil, errors.New("header data error")
 	}
 
-	fmt.Println("crc校验:", data)
-
 	//验证crc16
 	crc16 := crc16.CRC(data[:len(data)-2])
 	crc16msg := data[len(data)-2:]
 	//bert end
 
-	fmt.Println("检验:", crc16)
-
 	if bytes.Compare(crc16, crc16msg) != int(0) {
 		return nil, errors.New("header crc error")
 	}
-
-	// AA F3 04 01 60 01 60 02ED
 
 	//验证数据长度
 	dataLen := data[2:3]
@@ -142,7 +136,6 @@ func (h *Handle) chck(data []byte) ([]byte, error) {
 	return result, nil
 }
 
-// arrary("nihao"=>["nihao":1])
 func (h *Handle) work(funccode byte, data []byte) ([]byte, error) {
 	if h.iccid == "" {
 		if funccode != common.Registers {
@@ -420,72 +413,28 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 }
 
 func (h *Handle) setPrice(data []byte) ([]byte, error) {
+	list := h.model.HandleMiEquipment.Query("iccid =?", h.iccid)
 
-	fmt.Println(3131)
+	priceCode := make([]decimal.Decimal, 2)
+	priceCode[0] = decimal.NewFromFloat(list.AWarehousePrice)
+	priceCode[1] = decimal.NewFromFloat(list.BWarehousePrice)
 
-	// var (
-	// 	wareAPrice decimal.Decimal
-	// 	wareBPrice decimal.Decimal
-	// )
-
-	// wareAPriceUint64 := common.Hex2int(&[]byte{data[0], data[1]}) //350
-
-	// wareAPrice = common.Uint64toDecimal(int64(wareAPriceUint64), 100) //3.50
-
-	// wareBPriceUint64 := common.Hex2int(&[]byte{data[2], data[3]}) //
-	// wareBPrice = common.Uint64toDecimal(int64(wareBPriceUint64), 100)
-
-	// // fmt.Printf("a:%v b:%v\n", wareAPrice.String(), wareBPrice.String())
-	// whereA := make([]interface{}, 0)
-	// whereA = append(whereA, h.Iccid, 1)
-	// warehouseA := h.model.HandleMiWarehouse.Query("iccid = ? and warehouse_type = ?", whereA)
-	// if len(warehouseA) > 0 {
-	// 	warehouseAWrite := warehouseA[0]
-	// 	rPrice, _ := wareAPrice.Round(2).Float64()
-	// 	warehouseAWrite.WarehousePrice = rPrice
-	// 	if err := h.model.HandleMiWarehouse.Update(warehouseAWrite); err != nil {
-	// 		//错误的码
-	// 		// common.ModifyError
-	// 		return ModifyError, nil
-	// 	}
-	// } else {
-	// 	warehouseAWrite := &model.MiWarehouse{
-	// 		Iccid:          h.Iccid,
-	// 		WarehouseType:  1,
-	// 		WarehousePrice: float64(0),
-	// 	}
-	// 	if err := h.model.HandleMiWarehouse.Insert(warehouseAWrite); err != nil {
-	// 		//错误的码
-	// 		return ModifyError, nil
-	// 	}
-	// }
-
-	// whereB := make([]interface{}, 0)
-	// whereB = append(whereB, h.Iccid, 0)
-	// warehouseB := h.model.HandleMiWarehouse.Query("iccid = ? and warehouse_type = ?", whereB)
-	// if len(warehouseB) > 0 {
-	// 	warehouseBWrite := warehouseB[0]
-	// 	rPrice, _ := wareBPrice.Round(2).Float64()
-	// 	warehouseBWrite.WarehousePrice = rPrice
-	// 	if err := h.model.HandleMiWarehouse.Update(warehouseBWrite); err != nil {
-	// 		//错误的码
-	// 		return ModifyError, nil
-	// 	}
-	// } else {
-	// warehouseBWrite := &model.MiWarehouse{
-	// 		Iccid:          h.Iccid,
-	// 		WarehouseType:  1,
-	// 		WarehousePrice: float64(0),
-	// 	}
-	// 	if err := h.model.HandleMiWarehouse.Insert(warehouseBWrite); err != nil {
-	// 		//错误的码
-	// 		return ModifyError, nil
-	// 	}
-	// }
-	return nil, nil
+	aCode := apis.SetPrice2byte(priceCode[0])
+	bCode := apis.SetPrice2byte(priceCode[1])
+	code, err := apis.SetPriceCode(aCode + bCode)
+	if err != nil {
+		return nil, err
+	}
+	bs, err := hex.DecodeString(code)
+	if err != nil {
+		return nil, err
+	}
+	return bs, nil
 }
 
 func (h *Handle) switchad(data []byte) ([]byte, error) {
+
+	fmt.Println("31312")
 	var switchadType int = 0
 	switch data[0] {
 	case byte(0x00):
@@ -548,14 +497,12 @@ func (h *Handle) switchs(data []byte) ([]byte, error) {
 		switchss = 0
 	}
 
-	fmt.Println("结果:", switchss)
-
 	if err := h.model.HandleMiEquipment.SetSwitc("iccid =?", switchss); err != nil {
 		return nil, nil
 	}
 
 	if switchss == 0 {
-		h.tcpConn.Close()
+		defer h.tcpConn.Close()
 		return SwitchCloseError, nil
 	}
 

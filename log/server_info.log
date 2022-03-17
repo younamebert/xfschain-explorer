@@ -658,3 +658,33 @@ xfschain2022/03/15 - 20:44:58.541	[34minfo[0m	/Users/huangdaxian/Desktop/mi/co
 xfschain2022/03/15 - 20:46:49.181	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
 xfschain2022/03/15 - 20:46:49.183	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
 >>>>>>> cf81182263c04671211400af0beb9f2d283c4383
+xfschain2022/03/17 - 16:40:10.115	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 16:40:10.116	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 16:42:28.707	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 16:42:28.708	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 16:48:16.021	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 16:48:16.022	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 17:33:23.053	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 17:33:23.054	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 17:37:07.698	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 17:37:07.700	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 17:40:41.203	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 17:40:41.204	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 19:36:07.842	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 19:36:07.844	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 19:40:45.067	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 19:40:45.069	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 19:41:49.922	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 19:41:49.923	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 19:45:01.141	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 19:45:01.142	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 19:53:45.252	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 19:53:45.252	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 19:54:35.702	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 19:54:35.703	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 19:55:20.106	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 19:55:20.107	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 22:03:41.243	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 22:03:41.244	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/03/17 - 22:05:44.488	[34minfo[0m	/Users/huangdaxian/Desktop/mi/initialize/router.go:68	router register success
+xfschain2022/03/17 - 22:05:44.490	[34minfo[0m	/Users/huangdaxian/Desktop/mi/core/server.go:24	server run success on 	{"address": ":9800"}

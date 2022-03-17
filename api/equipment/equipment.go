@@ -51,11 +51,6 @@ func (ac *EquipmentLinkApi) EquipmentList(c *gin.Context) {
 	common.SendResponse(c, http.StatusOK, nil, result)
 }
 
-func (ac *EquipmentLinkApi) EquipmentSwitch(c *gin.Context) {
-	//   c.Qquer
-	// ac.Handle.HandleMiEquipment.Insert()
-}
-
 //关闭/打开广告屏 0关 1开
 func (ac *EquipmentLinkApi) SwitchAdvertising(c *gin.Context) {
 	//设备id
@@ -140,8 +135,8 @@ func (ac *EquipmentLinkApi) UpdatePrice(c *gin.Context) {
 	euqicondition := make(map[string]interface{}, 0)
 	euqicondition["iccid"] = parameter.Iccid
 	euqicondition["status"] = 1
+
 	euqiA := ac.Handle.HandleMiWarehouse.BeartQuery(euqicondition)
-	priceCode[0] = decimal.NewFromFloat(euqiA.WarehousePrice)
 	if parameter.APrice != "" {
 		APrice, err := decimal.NewFromString(parameter.APrice)
 		if err != nil {
@@ -149,7 +144,7 @@ func (ac *EquipmentLinkApi) UpdatePrice(c *gin.Context) {
 			return
 		}
 		price, ok := APrice.Round(2).Float64()
-		if !ok {
+		if ok {
 			euqiA.WarehousePrice = price
 			if err := ac.Handle.HandleMiWarehouse.Update(euqicondition, euqiA); err != nil {
 				common.SendResponse(c, http.StatusBadRequest, err, nil)
@@ -157,8 +152,10 @@ func (ac *EquipmentLinkApi) UpdatePrice(c *gin.Context) {
 			}
 		}
 	}
+	priceCode[0] = decimal.NewFromFloat(euqiA.WarehousePrice)
+
+	euqicondition["status"] = 2
 	euqiB := ac.Handle.HandleMiWarehouse.BeartQuery(euqicondition)
-	priceCode[1] = decimal.NewFromFloat(euqiB.WarehousePrice)
 	if parameter.BPrice != "" {
 		BPrice, err := decimal.NewFromString(parameter.BPrice)
 		if err != nil {
@@ -168,26 +165,31 @@ func (ac *EquipmentLinkApi) UpdatePrice(c *gin.Context) {
 		price, ok := BPrice.Round(2).Float64()
 		if !ok {
 			euqiB.WarehousePrice = price
+
 			if err := ac.Handle.HandleMiWarehouse.Update(euqicondition, euqiB); err != nil {
 				common.SendResponse(c, http.StatusBadRequest, err, nil)
 				return
 			}
 		}
 	}
+	priceCode[1] = decimal.NewFromFloat(euqiB.WarehousePrice)
 
 	// 拼凑code)
 	aCode := apis.SetPrice2byte(priceCode[0])
 	bCode := apis.SetPrice2byte(priceCode[1])
+	code, err := apis.SetPriceCode(aCode + bCode)
+	if err != nil {
+		common.SendResponse(c, http.StatusBadRequest, err, nil)
+		return
+	}
+	bs, err := hex.DecodeString(code)
+	if err != nil {
+		common.SendResponse(c, http.StatusBadRequest, err, nil)
+		return
+	}
+	fmt.Printf("%X\n", bs)
 
-	t := apis.SetPriceCode(aCode + bCode)
-
-	fmt.Println("数据:", t)
-
-	_ = t
-
-	b, _ := hex.DecodeString(t)
-
-	ac.Handle.EventsBus.Publish(events.SendNoticeEvent{Iccid: parameter.Iccid, Data: b})
+	ac.Handle.EventsBus.Publish(events.SendNoticeEvent{Iccid: parameter.Iccid, Data: bs})
 
 }
 

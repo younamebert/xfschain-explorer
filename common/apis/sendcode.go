@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"encoding/hex"
 	"fmt"
 	"mi/common/crc16"
 
@@ -63,13 +64,16 @@ func SwitchMac(status int) []byte {
 	}
 }
 
-func SetPriceCode(data string) string {
+func SetPriceCode(data string) (string, error) {
 	code := "AAF304"
 	// codelen := strconv.FormatInt(int64(len(data)), 16)
 	code = code + data
-
-	code = code + crc16.CRCS([]byte(code))
-	return code
+	bs, err := hex.DecodeString(code)
+	if err != nil {
+		return "", err
+	}
+	code = code + crc16.CRCS(bs)
+	return code, nil
 }
 
 func SetPrice2byte(price decimal.Decimal) string {
