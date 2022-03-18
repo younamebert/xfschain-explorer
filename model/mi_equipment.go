@@ -56,19 +56,13 @@ func (h *HandleMiEquipment) Querys(query, args interface{}, page, pageSize int) 
 }
 
 //查询单条
-func (h *HandleMiEquipment) Query(query, args interface{}) *MiEquipment {
+func (h *HandleMiEquipment) Query(query, args interface{}) MiEquipment {
 	db := global.GVA_DB.Table("mi_equipment")
-	miEquipments := new(MiEquipment)
-	if query != nil && args != nil {
-		db.Where(query, args)
+	var miEquipment MiEquipment
+	if err := db.Where(query, args).Find(&miEquipment).Error; err != nil {
+		return miEquipment
 	}
-
-	if err := db.Where(query, args).Find(&miEquipments).Error; err != nil {
-		global.GVA_LOG.Warn(err.Error())
-		return nil
-	}
-
-	return miEquipments
+	return miEquipment
 }
 
 func (h *HandleMiEquipment) SetSwitchad(iccid string, i int) error {
