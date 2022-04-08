@@ -100,3 +100,4 @@ xfschain2022/03/18 - 15:33:26.294	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tc
 xfschain2022/03/18 - 15:44:17.441	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/model/mi_equipment.go:67	record not found
 xfschain2022/03/18 - 16:04:19.888	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:56	EOF
 xfschain2022/03/18 - 16:38:59.310	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:56	read tcp 127.0.0.1:7898->127.0.0.1:49368: use of closed network connection
+xfschain2022/03/19 - 16:28:56.662	[33mwarn[0m	/Users/huangdaxian/Desktop/mi/tcpserve/handle.go:62	no iccid, please register first

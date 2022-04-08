@@ -15,6 +15,7 @@ import (
 	"mi/events"
 	"mi/global"
 	"mi/model"
+	"mi/pay/wechatpay"
 	"mi/tcpserve/common"
 	"mi/tools"
 	"net"
@@ -23,18 +24,18 @@ import (
 )
 
 type Handle struct {
-	model    *model.RecordHandle
-	iccid    string
-	tcpConn  net.Conn
-	outTime  *time.Timer
-	eventBus *events.EventBus
+	model          *model.RecordHandle
+	wechatpayServe *wechatpay.WeChatPay
+	iccid          string
+	tcpConn        net.Conn
+	eventBus       *events.EventBus
 }
 
 func NewHandle() *Handle {
 	handle := &Handle{
 		model:    model.NewRecordHandle(),
 		eventBus: events.EventBusExample,
-		outTime:  time.NewTimer(30 * time.Minute), //30分钟
+		wechatpayServe:wechatpay.DefaultWeChatPay()
 	}
 	// 处理广播
 	go handle.MsgBroadcastLoop()
@@ -46,7 +47,6 @@ func (h *Handle) Process(conn net.Conn) error {
 	//打开注释的地方(devour)
 	// defer conn.Close()
 	h.tcpConn = conn
-
 	for {
 		// h.MsgBroadcastLoop()
 		reader := bufio.NewReader(conn)
@@ -72,7 +72,8 @@ func (h *Handle) Process(conn net.Conn) error {
 
 func (h *Handle) resetOutTime(msgcode byte) {
 	if msgcode != common.Pant {
-		h.outTime.Reset(20 * time.Minute)
+		nowtime := time.Now()
+		h.tcpConn.SetDeadline(nowtime.Add(10 * time.Minute)) //设置刷新超时
 	}
 }
 
@@ -95,14 +96,10 @@ func (h *Handle) MsgBroadcastLoop() {
 					return
 				}
 			}
-		case outTime := <-h.outTime.C:
-			global.GVA_LOG.Error(fmt.Sprintf("Device timeout session iccid:%v outitme:%v", h.iccid, outTime.Unix()))
-			h.tcpConn.Close()
 		}
 	}
 }
 
-// func (h *Handle)
 func (h *Handle) chck(data []byte) ([]byte, error) {
 
 	//验证数据是否AA开头
@@ -195,7 +192,7 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 		wareA int = 0 // A仓库
 		wareB int = 0 // B仓库
 	)
-	fmt.Println(h.iccid)
+
 	wareA = common.WareType(data[0])
 	wareB = common.WareType(data[1])
 	// 写入数据库(a,b仓库)
@@ -286,130 +283,114 @@ func (h *Handle) pant(data []byte) ([]byte, error) {
 	return HeartbeatSucc, nil
 }
 
+func (h *Handle) wechatpay(amounts int,auto_code string)([]byte,error){
+    //获取本机服务器IP
+	ip, err := common.GetLocalIP()
+	if err != nil {
+		return UploadOrderError,err
+	}
+	//传入参数付款支付逻辑
+   micResp,err := h.wechatpayServe.Micropay(amounts,auto_code,"mi",ip)
+   if err!=nil{
+	   return UploadOrderError,err
+   }
+   //等待支付结果 15s
+   tchan := time.After(time.Second*15)//等待15秒在
+   //查询支付结果
+   query,_,err := h.wechatpayServe.OrderQuery(micResp.OutTradeNo)
+   if err!=nil{
+		return UploadOrderError,err
+   }
+   //判断支付结果
+   if query.ReturnCode != "SUCCESS"{
+    return UploadOrderError, err
+   }
+	//写入数据库
+	write := &model.MiOrder{
+		Iccid:         h.iccid,
+		PayType:       1,
+		PayCode:       micResp.Openid, //唯一标识
+		OrderNumber:   micResp.OutTradeNo, //订单号
+		PaymentAmount: amounts,
+		Number: auto_code,      //付款码
+	}
+
+	if err := h.model.HandleMiOrder.Insert(write); err != nil {
+		global.GVA_LOG.Warn(err.Error())
+		//返回错误码
+		return UploadOrderError, err
+	}
+	return UploadOrderSucc,nil
+}
+
+
+func (h *Handle) BalancePay(amounts uint64,cardnumber string)([]byte,error){
+	// 卡号查询余额
+	cardingo := h.model.HandleWlCardNumber.Query("number = ?", cardnumber)
+	if cardingo == nil {
+		global.GVA_LOG.Warn("卡号不存在")
+		return UploadOrderError, err	
+	}
+	// 对比余额
+	amount := decimal.NewFromInt(int64(amounts)).Mul(decimal.NewFromInt(100))
+	if amount.Cmp(cardingo.Balance)<1{
+		return UploadOrderError,nil
+	}
+	// 扣除余额
+	cardingo.Balance = cardingo.Balance.Sub(amounts)
+	// 开启事物扣除卡号表余额度
+    if err := h.model.HandleWlCardNumber.Update(&cardingo);err!=nil{
+		    global.GVA_LOG.Warn(err.Error())
+			return UploadOrderError, err	
+	}
+    //记录支付信息写入数据库
+	write := &model.MiOrder{
+		Iccid:         h.iccid,
+		PayType:       2,
+		PayCode:       cardingo.MemberId,//唯一标识
+		OrderNumber:   tools.GetOrder(),//订单号
+		PaymentAmount: amount.Div(100).Round(2),
+		Number: cardnumber,       //付款码
+	}
+	if err := h.model.HandleMiOrder.Insert(write); err != nil {
+		global.GVA_LOG.Warn(err.Error())
+		//返回错误码
+		return UploadOrderError, err
+	}
+	return UploadOrderSucc,nil
+}
+
 //上传订单
 func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 	var (
-		amounts decimal.Decimal
+		amounts uint64
 		payType int
 		payCode string
 	)
 
-	moneyUint64 := common.Hex2int(&[]byte{data[0], data[1]}) // 1045
-	amounts = common.Uint64toDecimal(int64(moneyUint64), 100)
+	//Ascii码
+	amounts := common.Hex2int(&[]byte{data[0], data[1]}) // 1045
 
-	_, _ = payType, payCode
-
-	cardNumber := h.model.HandleWlCardNumber.Query("number =?", "8939131")
-
-	//余额不足
-	money := decimal.NewFromFloat(cardNumber.Money).Round(2).BigFloat()
-
-	//余额不足
-	if money.Cmp(amounts.BigFloat()) < 0 {
-		return UploadOrderError, nil
+	deCodePay := make([]rune, 0)
+	for _, v := range data {
+		deCodePay = append(deCodePay, rune(v))
 	}
+	//付款码或者卡号
+	payCode = string(deCodePay)
 
-	switch len(data[1:]) {
-
-	//卡片支付
-	case common.Card:
-		break
-
-	//其它支付
-	case common.Other:
-
-		//微信支付
-
-		break
+	// 微信支付付款码
+	found, err := regexp.MatchString(`^1[0-5]\/d{16}$`, deCodePay)
+	if err != nil {
+		global.GVA_LOG.Warn(err)
 	}
-
-	write := &model.MiOrder{
-		Iccid:         h.iccid,
-		PayType:       len(data),
-		PayCode:       strconv.FormatInt(time.Now().Unix()+int64(rand.Intn(100000)), 10),
-		OrderNumber:   tools.GetOrder(),
-		PaymentAmount: amounts,
-		Number:        "8939131",
+	// 微信支付
+	if found {
+	  return h.wechatpay(int(amounts),payCode)
 	}
-
-	//查询设备id
-	list := h.model.HandleWlMange.Query("number =?", h.iccid)
-
-	amouts, _ := amounts.Float64()
-
-	//设备出售米纪录表
-	saleWari := &model.WlSale{
-		MangeId: list.MangeId,
-		Number:  2,
-		Money:   amouts,
-	}
-
-	//购米记录表
-	writes := &model.WlPurchaseRecord{
-		Price:    amouts,
-		OrderNo:  tools.GetOrder(),
-		PayTime:  time.Now(),
-		MemberId: cardNumber.MemberId,
-		Iccid:    h.iccid,
-		MangeId:  list.MangeId,
-	}
-
-	//余额足支付
-	if money.Cmp(amounts.BigFloat()) > 0 {
-		if err := h.model.HandleMiOrder.Insert(write); err != nil {
-			global.GVA_LOG.Warn(err.Error())
-
-			//返回错误码
-			return UploadOrderSucc, err
-		}
-
-		//设备出售米纪录表
-		if err := h.model.HandleWlSale.Insert(saleWari); err != nil {
-			global.GVA_LOG.Warn(err.Error())
-		}
-
-		//加入购米记录表
-		h.model.HandleWlPurchaseRecord.Insert(writes)
-
-		if err := h.model.HandleWlSale.Insert(saleWari); err != nil {
-			global.GVA_LOG.Warn(err.Error())
-		}
-
-		//扣余额
-		money.Sub(money, amounts.BigFloat())
-
-		moneyFloat, _ := money.Float64()
-
-		cardNumber.Money = moneyFloat
-
-		h.model.HandleWlCardNumber.Update("card_number_id=?", cardNumber.CardNumberId, cardNumber)
-
-		return UploadOrderSucc, nil
-	}
-
-	if money.Cmp(amounts.BigFloat()) == 0 {
-		if err := h.model.HandleMiOrder.Insert(write); err != nil {
-			// 	//返回错误码
-			global.GVA_LOG.Warn(err.Error())
-			return AddEquipmentRegistersErr, err
-		}
-
-		//加入购米记录表
-		if err := h.model.HandleWlPurchaseRecord.Insert(writes); err != nil {
-			global.GVA_LOG.Warn(err.Error())
-		}
-
-		//设备出售米纪录表
-		h.model.HandleWlSale.Insert(saleWari)
-		moneyFloat, _ := money.Float64()
-		cardNumber.Money = moneyFloat
-		h.model.HandleWlCardNumber.Update("card_number_id=?", cardNumber.CardNumberId, cardNumber)
-
-		return UploadOrderSucc, nil
-	}
-
-	return UploadOrderSucc, nil
+	// 卡号支付
+	return h.BalancePay(amounts,payCode)
 }
+
 
 func (h *Handle) setPrice(data []byte) ([]byte, error) {
 	list := h.model.HandleMiEquipment.Query("iccid =?", h.iccid)
@@ -435,7 +416,6 @@ func (h *Handle) setPrice(data []byte) ([]byte, error) {
 
 func (h *Handle) switchad(data []byte) ([]byte, error) {
 
-	fmt.Println("31312")
 	var switchadType int = 0
 	switch data[0] {
 	case byte(0x00):
