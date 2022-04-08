@@ -18,6 +18,7 @@ import (
 //MysqlDb mysql结构体
 func Gorm() *gorm.DB {
 	db, err := gorm.Open("mysql", "wl:123456@(120.26.217.42:3306)/wl?charset=utf8mb4&parseTime=True&loc=Local")
+	// defer db.Close()
 	// db.SetLogger(true)
 	db.LogMode(false)
 	if err != nil {
@@ -37,7 +38,7 @@ func Gorm() *gorm.DB {
 	// http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd
 	// http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd
 
-	// defer db.Close()
+	// fmt.Println(12)
 	db.SingularTable(true)
 	return db
 }

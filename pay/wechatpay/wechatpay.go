@@ -2,9 +2,7 @@ package wechatpay
 
 import (
 	"context"
-	"fmt"
 	"mi/conf"
-	"mi/global"
 
 	"github.com/go-pay/gopay"
 	"github.com/go-pay/gopay/pkg/util"
@@ -67,7 +65,7 @@ return:
 	{type:error}
 ]
 */
-func (wechatpay *WeChatPay) Micropay(total_fee int, auth_code, body, spbill_create_ip string) (*wechat.MicropayResponse, error) {
+func (wechatpay *WeChatPay) Micropay(total_fee int, auth_code, body, spbill_create_ip string) (*wechat.MicropayResponse, string, error) {
 	bm := make(gopay.BodyMap)
 
 	orderNumber := util.RandomString(32)
@@ -81,15 +79,15 @@ func (wechatpay *WeChatPay) Micropay(total_fee int, auth_code, body, spbill_crea
 
 	wxRsp, err := wechatpay.WeChatClient.Micropay(context.Background(), bm)
 	if err != nil {
-		return wxRsp, err
+		return wxRsp, orderNumber, err
 	}
 
-	ok, err := wechat.VerifySign(wechatpay.config.APIv2Key, wechat.SignType_MD5, wxRsp)
-	if err != nil {
-		return nil, err
-	}
-	global.GVA_LOG.Info(fmt.Sprintf("SignOk:%v", ok))
-	return wxRsp, nil
+	// _, err = wechat.VerifySign(wechatpay.config.APIv2Key, wechat.SignType_MD5, wxRsp)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// global.GVA_LOG.Info(fmt.Sprintf("SignOk:%v", ok))
+	return wxRsp, orderNumber, nil
 }
 
 /*

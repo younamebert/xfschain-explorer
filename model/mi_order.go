@@ -24,6 +24,7 @@ func (h *HandleMiOrder) Insert(mie *MiOrder) error {
 	mie.CreateTime = time.Now()
 	mie.UpdateTime = time.Now()
 	db := global.GVA_DB.Table("mi_order")
+	// fmt.Printf("dberr:%v\n", db)
 	if err := db.Create(&mie).Error; err != nil {
 		return err
 	}
