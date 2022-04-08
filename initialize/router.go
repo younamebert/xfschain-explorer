@@ -23,8 +23,6 @@ func Routers() *gin.Engine {
 
 	equipmentRouter := router.RouterGroupApp.EquipmentRouter
 
-	payRouters := router.RouterGroupApps.PayRouterGroup
-
 	PublicGroup := Router.Group("")
 	{
 		// 健康监测
@@ -33,8 +31,6 @@ func Routers() *gin.Engine {
 		})
 	}
 	equipmentRouter.EquipmentRouters(PublicGroup)
-
-	payRouters.PayRouters(PublicGroup)
 
 	// {
 	// 	IndexRouter.InitBaseRouter(PublicGroup) // 注册基础功能路由 不做鉴权
