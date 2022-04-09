@@ -303,17 +303,17 @@ func (h *Handle) WechatPay(amounts int, auto_code string) ([]byte, error) {
 			select {
 			case <-timeout:
 				//查询支付结果
-				// query, _, err := h.wechatpayServe.OrderQuery(ordernumber)
-				// if err != nil {
-				// 	chanErr <- err
-				// 	return
-				// }
-				// //判断支付结果
-				// // 交易成功判断条件： return_code、result_code和trade_state都为SUCCESS
-				// if query.ReturnCode != "SUCCESS" || query.ResultCode != "SUCCESS" || query.TradeState != "SUCCESS" {
-				// 	chanErr <- errors.New(query.ReturnMsg) //错误原因
-				// 	return
-				// }
+				query, _, err := h.wechatpayServe.OrderQuery(ordernumber)
+				if err != nil {
+					chanErr <- err
+					return
+				}
+				//判断支付结果
+				// 交易成功判断条件： return_code、result_code和trade_state都为SUCCESS
+				if query.ReturnCode != "SUCCESS" || query.ResultCode != "SUCCESS" || query.TradeState != "SUCCESS" {
+					chanErr <- errors.New(query.ReturnMsg) //错误原因
+					return
+				}
 
 				//订单记录写入数据库
 				write := &model.MiOrder{
