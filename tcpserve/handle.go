@@ -17,7 +17,6 @@ import (
 	"mi/model"
 	"mi/pay/wechatpay"
 	"mi/tcpserve/common"
-	"mi/tools"
 	"net"
 
 	"github.com/shopspring/decimal"
@@ -332,6 +331,7 @@ func (h *Handle) WechatPay(amounts int, auto_code string) ([]byte, error) {
 				}
 				//所有操作正确且成功
 				chanErr <- nil
+
 			}
 		}
 	}()
@@ -374,7 +374,7 @@ func (h *Handle) BalancePay(amounts uint64, cardnumber string) ([]byte, error) {
 		Iccid:         h.iccid,
 		PayType:       10,
 		PayCode:       strconv.Itoa(cardingo.MemberId), //唯一标识
-		OrderNumber:   tools.GetOrder(),                //订单号
+		OrderNumber:   common.GetOrder(),               //订单号
 		PaymentAmount: amount.Div(decimal.NewFromInt(100)).Round(2),
 		Number:        cardnumber, //付款码
 	}
@@ -399,7 +399,7 @@ func (h *Handle) uploadOrder(data []byte) ([]byte, error) {
 	payCode := string(deCodePay)
 
 	// 微信支付付款码
-	found, err := regexp.MatchString(`^1[0-5]\/d{16}$`, payCode)
+	found, err := regexp.MatchString(`^1[0-5]\d{16}$`, payCode)
 	if err != nil {
 		global.GVA_LOG.Warn(err.Error())
 	}

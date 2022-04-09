@@ -20,7 +20,7 @@ type WlCardNumber struct {
 
 //查
 func (h *HandleWlCardNumber) Query(query, args interface{}) *WlCardNumber {
-	db := global.GVA_DB.Table("wl_card_number")
+	db := global.GVA_DBList["wl_card_number"]
 	wlCardNumber := new(WlCardNumber)
 	if err := db.Where(query, args).Take(&wlCardNumber).Error; err != nil {
 		return nil

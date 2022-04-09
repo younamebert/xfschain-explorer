@@ -22,7 +22,7 @@ type WlPurchaseRecord struct {
 func (h *HandleWlPurchaseRecord) Insert(mie *WlPurchaseRecord) error {
 	mie.CreateTime = time.Now()
 	mie.UpdateTime = time.Now()
-	db := global.GVA_DB.Table("wl_purchase_record")
+	db := global.GVA_DBList["wl_purchase_record"]
 	if err := db.Create(&mie).Error; err != nil {
 		fmt.Println(err)
 		return err

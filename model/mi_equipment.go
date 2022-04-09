@@ -20,7 +20,7 @@ type MiEquipment struct {
 func (h *HandleMiEquipment) Insert(mie *MiEquipment) error {
 	mie.CreateTime = time.Now()
 	mie.UpdateTime = time.Now()
-	db := global.GVA_DB.Table("mi_equipment")
+	db := global.GVA_DBList["mi_equipment"]
 	if err := db.Create(&mie).Error; err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (h *HandleMiEquipment) Insert(mie *MiEquipment) error {
 }
 
 func (h *HandleMiEquipment) Count(query, args interface{}) int64 {
-	db := global.GVA_DB.Table("mi_equipment")
+	db := global.GVA_DBList["mi_equipment"]
 	var count int64 = 0
 	if query != nil && args != nil {
 		db.Where(query, args)
@@ -41,7 +41,7 @@ func (h *HandleMiEquipment) Count(query, args interface{}) int64 {
 }
 
 func (h *HandleMiEquipment) Querys(query, args interface{}, page, pageSize int) []*MiEquipment {
-	db := global.GVA_DB.Table("mi_equipment")
+	db := global.GVA_DBList["mi_equipment"]
 	miEquipments := make([]*MiEquipment, pageSize)
 	if query != nil && args != nil {
 		db.Where(query, args)
@@ -57,7 +57,7 @@ func (h *HandleMiEquipment) Querys(query, args interface{}, page, pageSize int) 
 
 //查询单条
 func (h *HandleMiEquipment) Query(query, args interface{}) MiEquipment {
-	db := global.GVA_DB.Table("mi_equipment")
+	db := global.GVA_DBList["mi_equipment"]
 	var miEquipment MiEquipment
 	if err := db.Where(query, args).Find(&miEquipment).Error; err != nil {
 		return miEquipment
@@ -66,7 +66,7 @@ func (h *HandleMiEquipment) Query(query, args interface{}) MiEquipment {
 }
 
 func (h *HandleMiEquipment) SetSwitchad(iccid string, i int) error {
-	db := global.GVA_DB.Table("mi_equipment")
+	db := global.GVA_DBList["mi_equipment"]
 
 	err := db.Where("iccid = ?", iccid).Update("switchad", i).Error
 	if err != nil {
@@ -76,7 +76,7 @@ func (h *HandleMiEquipment) SetSwitchad(iccid string, i int) error {
 }
 
 func (h *HandleMiEquipment) SetSwitchadLed(iccid string, i int) error {
-	db := global.GVA_DB.Table("mi_equipment")
+	db := global.GVA_DBList["mi_equipment"]
 
 	err := db.Where("iccid = ?", iccid).Update("switch_lamp", i).Error
 	if err != nil {
@@ -86,7 +86,7 @@ func (h *HandleMiEquipment) SetSwitchadLed(iccid string, i int) error {
 }
 
 func (h *HandleMiEquipment) SetSwitc(iccid string, i int) error {
-	db := global.GVA_DB.Table("mi_equipment")
+	db := global.GVA_DBList["mi_equipment"]
 
 	err := db.Where("iccid = ?", iccid).Update("status", i).Error
 	if err != nil {
@@ -96,7 +96,7 @@ func (h *HandleMiEquipment) SetSwitc(iccid string, i int) error {
 }
 
 func (h *HandleMiEquipment) Update(iccid string, args string, money float64) error {
-	db := global.GVA_DB.Table("mi_equipment")
+	db := global.GVA_DBList["mi_equipment"]
 
 	err := db.Where("iccid = ?", iccid).Update(args, money).Error
 	if err != nil {
@@ -106,7 +106,7 @@ func (h *HandleMiEquipment) Update(iccid string, args string, money float64) err
 }
 
 func (h *HandleMiEquipment) SwitchMachine(iccid string, i int) error {
-	db := global.GVA_DB.Table("mi_equipment")
+	db := global.GVA_DBList["mi_equipment"]
 
 	err := db.Where("iccid = ?", iccid).Update("status", i).Error
 	if err != nil {

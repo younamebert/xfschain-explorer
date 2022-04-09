@@ -23,7 +23,7 @@ type MiWarehouse struct {
 func (h *HandleMiWarehouse) Insert(mie *MiWarehouse) error {
 	mie.CreateTime = time.Now()
 	mie.UpdateTime = time.Now()
-	db := global.GVA_DB.Table("mi_warehouse")
+	db := global.GVA_DBList["mi_warehouse"]
 	if err := db.Create(&mie).Error; err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (h *HandleMiWarehouse) Insert(mie *MiWarehouse) error {
 func (h *HandleMiWarehouse) Update(condition map[string]interface{}, mie *MiWarehouse) error {
 	mie.CreateTime = time.Now()
 	mie.UpdateTime = time.Now()
-	db := global.GVA_DB.Table("mi_warehouse")
+	db := global.GVA_DBList["mi_warehouse"]
 	if condition != nil {
 		db.Where(condition)
 	}
@@ -44,7 +44,7 @@ func (h *HandleMiWarehouse) Update(condition map[string]interface{}, mie *MiWare
 }
 
 func (h *HandleMiWarehouse) Query(query, args, args2 interface{}) *MiWarehouse {
-	db := global.GVA_DB.Table("mi_warehouse")
+	db := global.GVA_DBList["mi_warehouse"]
 	miWarehouses := new(MiWarehouse)
 	if err := db.Where(query, args, args2).Find(&miWarehouses).Error; err != nil {
 		return miWarehouses
@@ -53,7 +53,7 @@ func (h *HandleMiWarehouse) Query(query, args, args2 interface{}) *MiWarehouse {
 }
 
 func (h *HandleMiWarehouse) BeartQuery(condition map[string]interface{}) *MiWarehouse {
-	db := global.GVA_DB.Table("mi_warehouse")
+	db := global.GVA_DBList["mi_warehouse"]
 	miWarehouses := new(MiWarehouse)
 
 	if condition != nil {
@@ -67,7 +67,7 @@ func (h *HandleMiWarehouse) BeartQuery(condition map[string]interface{}) *MiWare
 }
 
 func (h *HandleMiWarehouse) Querys(query, args interface{}, page, pageSize int) []*MiWarehouse {
-	db := global.GVA_DB.Table("mi_warehouse")
+	db := global.GVA_DBList["mi_warehouse"]
 	miWarehouses := make([]*MiWarehouse, pageSize)
 	if query != nil && args != nil {
 		db.Where(query, args)
@@ -83,7 +83,7 @@ func (h *HandleMiWarehouse) Querys(query, args interface{}, page, pageSize int) 
 func (h *HandleMiWarehouse) SaveWare(query, args, querys, args2 interface{}, mie *MiWarehouse) error {
 
 	// fmt.Println(mie)
-	db := global.GVA_DB.Table("mi_warehouse")
+	db := global.GVA_DBList["mi_warehouse"]
 	mie.UpdateTime = time.Now()
 	if err := db.Where(query, args).Where(querys, args2).Update(&mie).Error; err != nil {
 		return err

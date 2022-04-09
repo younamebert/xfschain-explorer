@@ -1,2 +1,8 @@
 xfschain2022/04/08 - 22:17:07.740	[34minfo[0m	/Users/lanyuanbert/gowork/src/mi/initialize/router.go:68	router register success
 xfschain2022/04/08 - 22:17:07.740	[34minfo[0m	/Users/lanyuanbert/gowork/src/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/04/09 - 09:30:54.695	[34minfo[0m	/Users/lanyuanbert/gowork/src/mi/initialize/router.go:68	router register success
+xfschain2022/04/09 - 09:30:54.697	[34minfo[0m	/Users/lanyuanbert/gowork/src/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/04/09 - 10:06:54.700	[34minfo[0m	/Users/lanyuanbert/gowork/src/mi/initialize/router.go:68	router register success
+xfschain2022/04/09 - 10:06:54.701	[34minfo[0m	/Users/lanyuanbert/gowork/src/mi/core/server.go:24	server run success on 	{"address": ":9800"}
+xfschain2022/04/09 - 10:10:31.599	[34minfo[0m	/Users/lanyuanbert/gowork/src/mi/initialize/router.go:68	router register success
+xfschain2022/04/09 - 10:10:31.601	[34minfo[0m	/Users/lanyuanbert/gowork/src/mi/core/server.go:24	server run success on 	{"address": ":9800"}

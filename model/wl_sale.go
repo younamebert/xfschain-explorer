@@ -18,7 +18,7 @@ type WlSale struct {
 func (h *HandleWlSale) Insert(mie *WlSale) error {
 	mie.CreateTime = time.Now()
 	mie.UpdateTime = time.Now()
-	db := global.GVA_DB.Table("wl_sale")
+	db := global.GVA_DBList["wl_sale"]
 	if err := db.Create(&mie).Error; err != nil {
 		return err
 	}

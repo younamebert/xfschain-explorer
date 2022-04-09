@@ -23,8 +23,7 @@ type MiOrder struct {
 func (h *HandleMiOrder) Insert(mie *MiOrder) error {
 	mie.CreateTime = time.Now()
 	mie.UpdateTime = time.Now()
-	db := global.GVA_DB.Table("mi_order")
-	// fmt.Printf("dberr:%v\n", db)
+	db := global.GVA_DBList["mi_order"]
 	if err := db.Create(&mie).Error; err != nil {
 		return err
 	}
@@ -32,7 +31,7 @@ func (h *HandleMiOrder) Insert(mie *MiOrder) error {
 }
 
 func (h *HandleMiOrder) Count(query, args interface{}) int64 {
-	db := global.GVA_DB.Table("mi_order")
+	db := global.GVA_DBList["mi_order"]
 	var count int64 = 0
 	if query != nil && args != nil {
 		db.Where(query, args)
@@ -46,7 +45,7 @@ func (h *HandleMiOrder) Count(query, args interface{}) int64 {
 }
 
 func (h *HandleMiOrder) Querys(query, args interface{}, page, pageSize int) []*MiEquipment {
-	db := global.GVA_DB.Table("mi_order")
+	db := global.GVA_DBList["mi_order"]
 	miEquipments := make([]*MiEquipment, pageSize)
 	if query != nil && args != nil {
 		db.Where(query, args)
@@ -61,7 +60,7 @@ func (h *HandleMiOrder) Querys(query, args interface{}, page, pageSize int) []*M
 }
 
 func (h *HandleMiOrder) SetSwitchad(iccid string, i int) error {
-	db := global.GVA_DB.Table("mi_order")
+	db := global.GVA_DBList["mi_order"]
 
 	err := db.Where("iccid = ?", iccid).Update("switchad", i).Error
 	if err != nil {
@@ -71,7 +70,7 @@ func (h *HandleMiOrder) SetSwitchad(iccid string, i int) error {
 }
 
 func (h *HandleMiOrder) SetSwitchadLed(iccid string, i int) error {
-	db := global.GVA_DB.Table("mi_order")
+	db := global.GVA_DBList["mi_order"]
 
 	err := db.Where("iccid = ?", iccid).Update("switch_lamp", i).Error
 	if err != nil {

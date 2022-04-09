@@ -64,3 +64,16 @@ func installMysql(db *gorm.DB) error {
 	}
 	return nil
 }
+
+func DBList() {
+	dbMap := make(map[string]*gorm.DB)
+	for _, dbname := range conf.DBlist {
+		dbMap[dbname] = global.GVA_DB.Table(dbname)
+	}
+	// 做特殊判断,是否有迁移
+	// 适配低版本迁移多数据库版本
+	// if sysDB, ok := dbMap[sys]; ok {
+	// 	global.GVA_DB = sysDB
+	// }
+	global.GVA_DBList = dbMap
+}

@@ -13,7 +13,7 @@ type WlMange struct {
 }
 
 func (h *HandleWlMange) Query(query, args interface{}) WlMange {
-	db := global.GVA_DB.Table("wl_mange")
+	db := global.GVA_DBList["wl_mange"]
 	var wlMange WlMange
 	if err := db.Where(query, args).Find(&wlMange).Error; err != nil {
 		return wlMange
