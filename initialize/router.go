@@ -22,6 +22,7 @@ func Routers() *gin.Engine {
 	// 获取路由组实例
 
 	equipmentRouter := router.RouterGroupApp.EquipmentRouter
+	paymentRouter := router.RouterGroupApp.PaymentRouter
 
 	PublicGroup := Router.Group("")
 	{
@@ -31,6 +32,7 @@ func Routers() *gin.Engine {
 		})
 	}
 	equipmentRouter.EquipmentRouters(PublicGroup)
+	paymentRouter.PaymentRouters(PublicGroup)
 
 	// {
 	// 	IndexRouter.InitBaseRouter(PublicGroup) // 注册基础功能路由 不做鉴权
